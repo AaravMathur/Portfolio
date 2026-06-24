@@ -252,6 +252,7 @@ export default function App() {
           { type: 'output', text: 'Available commands:' },
           { type: 'output', text: '  about        - Detailed summary of Aarav Mathur (with Email, GitHub, etc.)' },
           { type: 'output', text: '  skills       - Visual breakdown of technical & QA testing competencies' },
+          { type: 'output', text: '  qa           - Simulate interactive QA test runs (Selenium, Postman, JMeter)' },
           { type: 'output', text: '  internships  - Chronological summary of internship experiences' },
           { type: 'output', text: '  certs        - View professional training & course certificates' },
           { type: 'output', text: '  contact      - Retrieve direct contact lines and social anchors' },
@@ -317,6 +318,26 @@ export default function App() {
           { type: 'output', text: '📞 Phone:   +91 9887045678' },
           { type: 'output', text: '🔗 LinkedIn: www.linkedin.com/in/aarav-mathur-514a62202' },
           { type: 'output', text: '🏠 Address:  24/143 Swarn Path Mansarovar, Jaipur' }
+        )
+        break
+      case 'qa':
+        newHistory.push(
+          { type: 'output', text: '🧪 Initiating Simulated QA Test Suite...' },
+          { type: 'output', text: '------------------------------------------------------------' },
+          { type: 'output', text: '1. [Selenium] Headless Chrome web driver initialized successfully.' },
+          { type: 'output', text: '   -> Navigating to target authentication portal...' },
+          { type: 'output', text: '   -> Inputting elements: username, password.' },
+          { type: 'output', text: '   -> Verifying dashboard redirect response: SUCCESS (UI checks passed)' },
+          { type: 'output', text: '2. [Postman] Verifying API integrations & assertions...' },
+          { type: 'output', text: '   -> GET /api/v1/health-check Status: 200 OK ResponseTime: 12ms' },
+          { type: 'output', text: '   -> POST /api/v1/order Payload Assertion: PASSED' },
+          { type: 'output', text: '3. [JMeter] Executing load performance test profile...' },
+          { type: 'output', text: '   -> Spawning 50 threads with 5s ramp-up...' },
+          { type: 'output', text: '   -> Average latency: 154ms, Error rate: 0.00%' },
+          { type: 'output', text: '------------------------------------------------------------' },
+          { type: 'output', text: '✅ All QA Automated test checks returned code 0 (Success).' },
+          { type: 'output', text: '💡 Note: You can interactively run these test suites in the graphical' },
+          { type: 'output', text: '   "Interactive QA & Test Automation Suite" dashboard below!' }
         )
         break
       case 'clear':
@@ -531,7 +552,7 @@ export default function App() {
               Hi, I'm <span className="text-gradient">Aarav Mathur</span>
             </h1>
             <h2 style={{ fontSize: '1.8rem', color: 'var(--text-secondary)', fontWeight: '500', marginBottom: '16px' }}>
-              Cloud Infrastructure & DevOps Engineer
+              Cloud Infrastructure, DevOps & QA Automation Engineer
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '600px' }}>
               Specializing in building robust containerized pipelines, automating cloud provisioning, and implementing Infrastructure as Code. Passionate about Linux systems, Kubernetes orchestration, and competitive programming.
@@ -561,9 +582,15 @@ export default function App() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </a>
+            <a href="#qa" className="btn-secondary" style={{ borderColor: 'var(--accent-purple)' }}>
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" style={{ color: 'var(--accent-purple)' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Launch QA Suite</span>
+            </a>
             <a href="#terminal" className="btn-secondary">
               <TerminalIcon />
-              <span>Open Terminal Terminal</span>
+              <span>Open Terminal</span>
             </a>
           </div>
         </div>
