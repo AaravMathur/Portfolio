@@ -84,14 +84,13 @@ export default function App() {
     { type: 'output', text: "Type 'help' to see the available commands." },
   ])
   const [terminalInput, setTerminalInput] = useState<string>('')
-  const [showMatrix, setShowMatrix] = useState<boolean>(false)
   const terminalBodyRef = useRef<HTMLDivElement>(null)
   const terminalInputRef = useRef<HTMLInputElement>(null)
 
   // Skills interactive descriptions state
   const [selectedSkill, setSelectedSkill] = useState<{name: string, desc: string} | null>({
-    name: "Kubernetes",
-    desc: "Aarav is highly proficient in Kubernetes. Implemented scalable container deployments, pod orchestration, services, and ingress setups in multi-cloud environments during internship projects."
+    name: "Selenium",
+    desc: "Highly skilled in web automation using Selenium WebDriver in Python. Developed robust test suites, DOM selector routines, and responsive layout assertions."
   })
 
   // Pipeline Simulator State
@@ -125,6 +124,83 @@ export default function App() {
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success'>('idle')
   const [showToast, setShowToast] = useState<boolean>(false)
 
+  // QA Dashboard State
+  const [qaActiveTab, setQaActiveTab] = useState<'selenium' | 'postman' | 'jmeter'>('selenium')
+  const [qaTestStatus, setQaTestStatus] = useState<'idle' | 'running' | 'success'>('idle')
+  const [qaProgress, setQaProgress] = useState<number>(0)
+  const [qaLogs, setQaLogs] = useState<string[]>(["Select a test suite and click 'Execute Test Suite' above."])
+
+  // Reset QA logs when active tab changes
+  useEffect(() => {
+    setQaTestStatus('idle')
+    setQaProgress(0)
+    setQaLogs([`Ready to run ${qaActiveTab === 'selenium' ? 'Selenium UI WebDriver' : qaActiveTab === 'postman' ? 'Postman Newman API' : 'JMeter Load Performance'} test suite.`])
+  }, [qaActiveTab])
+
+  const runQaTestSuite = async () => {
+    setQaTestStatus('running')
+    setQaProgress(0)
+    setQaLogs([])
+
+    const logsMap = {
+      selenium: [
+        "⚡ Starting Selenium WebDriver automation task...",
+        "📦 Loading chromedriver binary...",
+        "🌐 Navigating browser viewport to https://nwr-mp-items.aarav.dev",
+        "🔍 Searching DOM node elements for login_form...",
+        "✔ Element found: username_field and password_field. Injecting mock credentials.",
+        "⌨ Action: Typing admin user parameters... complete.",
+        "🖱️ Action: Triggering Click event on SubmitButton.",
+        "⌛ Waiting for server response redirects...",
+        "✔ Redirect caught successfully: /dashboard [HTTP 200 OK]",
+        "🧪 Assertion Check 1: User welcome banner is visible. [PASSED]",
+        "🧪 Assertion Check 2: GM Requests list contains items. [PASSED]",
+        "🧹 Closing browser instance and releasing webdriver threads.",
+        "🎉 SUCCESS: Selenium UI test suite executed with 100% assertions passed!"
+      ],
+      postman: [
+        "⚡ Starting Newman command runner...",
+        "📁 Loading API Collections: nwr_api_tests.json",
+        "📁 Loading API Environment Variables: production_env.json",
+        "🚀 Running test sequence (3 requests, 6 assertions)...",
+        "GET /api/v1/requests | Status: 200 OK | Time: 45ms",
+        "  ✔ Assertion: Response status code is 200 - PASSED",
+        "  ✔ Assertion: Content-Type is application/json - PASSED",
+        "POST /api/v1/requests | Status: 201 Created | Time: 94ms",
+        "  ✔ Assertion: Request created successfully - PASSED",
+        "  ✔ Assertion: Response body returns request ID - PASSED",
+        "PUT /api/v1/requests/approve/1 | Status: 200 OK | Time: 82ms",
+        "  ✔ Assertion: Request is marked as Approved - PASSED",
+        "  ✔ Assertion: Updated timestamp is returned - PASSED",
+        "🎉 SUCCESS: 3/3 API calls tested. 6/6 assertions passed!"
+      ],
+      jmeter: [
+        "⚡ Initializing JMeter CLI engine...",
+        "📂 Parsing test plan parameters: performance_profile.jmx",
+        "📈 Warmup stage: Scaling virtual threads from 0 to 500...",
+        "🔥 Load stage: Simulating 1,200 concurrent HTTP threads...",
+        "📊 Sampling throughput details...",
+        "  - Thread Count: 1,200 Active Users",
+        "  - Total Transferred: 4.8 MB/s",
+        "  - Average Response Time: 84ms [Target: <200ms] - EXCELLENT",
+        "  - Throughput: 242.8 requests/sec",
+        "  - Server Error Rate: 0.00% [Target: <1%] - PASSED",
+        "🧹 Tearing down performance test session...",
+        "🎉 SUCCESS: System performance benchmarked successfully under load!"
+      ]
+    }
+
+    const currentLogs = logsMap[qaActiveTab]
+    
+    for (let i = 0; i < currentLogs.length; i++) {
+      setQaLogs(prev => [...prev, currentLogs[i]])
+      setQaProgress(Math.min(100, Math.round(((i + 1) / currentLogs.length) * 100)))
+      await new Promise(resolve => setTimeout(resolve, 250))
+    }
+
+    setQaTestStatus('success')
+  }
+
   // Sync theme selection to root document class
   useEffect(() => {
     if (isDarkMode) {
@@ -143,18 +219,23 @@ export default function App() {
 
   // Handle skills dictionary
   const skillDetails: Record<string, string> = {
-    "Kubernetes": "Aarav is highly proficient in Kubernetes. Implemented scalable container deployments, pod orchestration, services, and ingress setups in multi-cloud environments during internship projects.",
-    "Docker": "Used for containerizing Python and Java microservices. Created multi-stage Dockerfiles to minimize image size and automated image building through CI/CD pipelines.",
-    "Terraform": "Utilized Infrastructure as Code (IaC) to spin up VPCs, subnets, EC2 nodes, and database architectures consistently. Experience provisioning resources on both Azure and AWS.",
-    "Amazon Web Service (AWS)": "Knowledge of EC2, S3, IAM, CloudWatch, Route53, and VPC networking. Built scripts using boto3 library for automated resource management.",
-    "Azure": "Collaborated during the Celebal Technologies internship to deploy and manage scalable container operations using Azure Cloud infrastructure.",
-    "Python": "Primary language for automating deployment scripts, working with AWS boto3 SDK, competitive programming, and backend logic development.",
-    "MySQL": "Relational database configuration, SQL query optimization, backups, and user credential permission management.",
-    "Jenkins": "Configured build runners, Jenkinsfiles, and integrated webhooks to trigger build/test automation tasks on code push.",
-    "Linux": "Deep familiarity with RHEL, Ubuntu, CentOS. Skilled in shell scripting (Bash), system administration, resource monitoring, and permission setups.",
-    "Vagrant": "Used for setting up reproducible virtual developer environments to test network topologies and local service bindings.",
-    "Tomcat": "Configured Tomcat servlet containers for Java web apps, dealing with SSL binds, keystores, and server tuning configurations.",
-    "GitHub": "Advanced version control workflows including branching, pull request policies, action runners, and secure secrets management."
+    "Kubernetes": "Orchestrated container cluster workloads, pod scaling schedules, and services mappings in multi-cloud configurations.",
+    "Docker": "Used for containerizing web microservices. Created multi-stage Dockerfiles to minimize image sizes.",
+    "Terraform": "Utilized Infrastructure as Code (IaC) templates to provision resources on Azure and AWS cloud setups.",
+    "Amazon Web Service (AWS)": "Experience handling EC2 instances, S3 storage, IAM routing, and virtual networks.",
+    "Azure": "Managed Azure virtual machines, resource groups, and storage interfaces for scalable deployments.",
+    "Python": "Primary language for writing Selenium automation suites, API scripts, and scripting DevOps configurations.",
+    "MySQL": "Relational database query tuning, table index configurations, and credentials setup.",
+    "Jenkins": "Automated build execution, testing suites triggers, and notifications workflows in pipeline integrations.",
+    "Linux": "Skilled in shell scripting (Bash), system diagnostics, permissions setups, and cron automated timers.",
+    "GitHub": "Version control branching strategies, code integration checks, and runner secrets configuration.",
+    "Ansible": "Configured configuration management playbooks to orchestrate package installs and services setup on host VMs.",
+    "MongoDB": "NoSQL document aggregates, JSON payloads storage, and aggregation pipeline querying.",
+    "Jira": "Sprint tracking, bug ticket workflows, test cycles mapping (Xray integration), and agile task board organization.",
+    "Selenium": "Highly skilled in web automation using Selenium WebDriver in Python. Developed robust test suites, DOM selector routines, and responsive layout assertions.",
+    "Postman": "REST API validation, writing response body check scripts, setting auth environments, and batch collections runners (Newman).",
+    "JMeter": "Conducted load testing up to 1,000+ virtual users, analyzing request throughput, latencies, and service error curves.",
+    "Appium": "Configured mobile test suites running on emulators to verify touch controls, responsive UI viewport shifts, and visual assets."
   }
 
   // Handle Terminal commands
@@ -169,85 +250,49 @@ export default function App() {
       case 'help':
         newHistory.push(
           { type: 'output', text: 'Available commands:' },
-          { type: 'output', text: '  about      - Detailed summary of Aarav Mathur' },
-          { type: 'output', text: '  skills     - Visual breakdown of technical competencies' },
-          { type: 'output', text: '  experience - Chronological summary of internships' },
-          { type: 'output', text: '  certs      - View professional training & course certificates' },
-          { type: 'output', text: '  tfplan     - Execute a simulated Infrastructure-as-Code Terraform dry run' },
-          { type: 'output', text: '  k8s        - Query running Kubernetes pod status details' },
-          { type: 'output', text: '  matrix     - Initiate a glowing digital rain terminal stream (4s)' },
-          { type: 'output', text: '  contact    - Retrieve direct contact lines and social anchors' },
-          { type: 'output', text: '  clear      - Clear the command interface' }
+          { type: 'output', text: '  about        - Detailed summary of Aarav Mathur (with Email, GitHub, etc.)' },
+          { type: 'output', text: '  skills       - Visual breakdown of technical & QA testing competencies' },
+          { type: 'output', text: '  internships  - Chronological summary of internship experiences' },
+          { type: 'output', text: '  certs        - View professional training & course certificates' },
+          { type: 'output', text: '  contact      - Retrieve direct contact lines and social anchors' },
+          { type: 'output', text: '  clear        - Clear the command interface' }
         )
         break
       case 'about':
         newHistory.push(
-          { type: 'output', text: 'Aarav Mathur | B.Tech CSE Student (Class of 2026)' },
+          { type: 'output', text: 'Aarav Mathur | DevOps & QA Automation Engineer' },
           { type: 'output', text: '------------------------------------------------------------' },
-          { type: 'output', text: 'Education:  Amity University Rajasthan (Class of 2026)' },
-          { type: 'output', text: 'Location:   Jaipur, Rajasthan, India' },
-          { type: 'output', text: 'Specialty:  DevOps Engineering, CI/CD Automations, Infrastructure as Code' },
-          { type: 'output', text: 'Focus:      Combining system engineering, virtualization, and cloud networks.' }
+          { type: 'output', text: '📫 Email:      mathuraarav2005@gmail.com' },
+          { type: 'output', text: '🔗 GitHub:     github.com/AaravMathur' },
+          { type: 'output', text: '🔗 LinkedIn:   linkedin.com/in/aarav-mathur-514a62202' },
+          { type: 'output', text: '📞 Phone:      +91 9887045678' },
+          { type: 'output', text: '🎓 Education:  B.Tech CSE, Amity University Rajasthan (Class of 2026)' },
+          { type: 'output', text: '📍 Location:   Jaipur, Rajasthan, India' },
+          { type: 'output', text: '🚀 Focus:      QA Automation, CI/CD Pipeline Architectures, Performance Auditing' }
         )
         break
       case 'skills':
         newHistory.push(
-          { type: 'output', text: 'Aarav\'s DevOps Stack & Core Tools:' },
+          { type: 'output', text: 'Aarav\'s QA Automation & DevOps Competencies:' },
           { type: 'output', text: '============================================================' },
-          { type: 'output', text: '🚀 IaC & Cloud:   Terraform, AWS, Microsoft Azure' },
-          { type: 'output', text: '🐳 Container:     Docker, Kubernetes (k8s)' },
-          { type: 'output', text: '🛠️ Automation:    Jenkins, GitHub Actions, Vagrant, Tomcat' },
-          { type: 'output', text: '💻 Languages:     Python (boto3), MySQL, Shell Scripting, C/C++' },
-          { type: 'output', text: '🐧 Platforms:     Linux (RHEL/Ubuntu/CentOS), Windows Server' }
+          { type: 'output', text: '🧪 QA & Testing:  Selenium (Python scripts), Postman, JMeter, Appium, Jira' },
+          { type: 'output', text: '🚀 DevOps & CI/CD: Jenkins, Ansible, Docker, Kubernetes, Terraform' },
+          { type: 'output', text: '☁️ Cloud & OS:    Microsoft Azure, AWS, Linux (Ubuntu/RHEL/CentOS)' },
+          { type: 'output', text: '💾 DBs & Code:    MongoDB, MySQL, Python, Shell Scripting, C/C++' }
         )
         break
       case 'experience':
+      case 'internships':
         newHistory.push(
           { type: 'output', text: 'Professional Internship Engagements:' },
           { type: 'output', text: '============================================================' },
           { type: 'output', text: '💼 Celebal Technologies | Remote DevOps Intern' },
           { type: 'output', text: '   Duration: June 2025 - Aug 2025' },
-          { type: 'output', text: '   Project:  Cloud Infrastructure Management & Operations' },
-          { type: 'output', text: '   Work:     IaC scripts (Terraform) for multi-cloud, container scheduling (k8s).' },
+          { type: 'output', text: '   Work:     IaC configurations (Terraform) on Azure cloud, Docker building.' },
           { type: 'output', text: '' },
           { type: 'output', text: '💼 North Western Railways (NWR) | On-Site Developer Intern' },
           { type: 'output', text: '   Duration: June 2024 - Aug 2024' },
-          { type: 'output', text: '   Project:  Railway MP Items Web application' },
-          { type: 'output', text: '   Work:     Developed internal portals to register, monitor, and update MP/MLA track requests.' }
-        )
-        break
-      case 'tfplan':
-        newHistory.push(
-          { type: 'output', text: '$ terraform plan' },
-          { type: 'output', text: 'Terraform v1.5.0 on linux_amd64' },
-          { type: 'output', text: 'Refreshing Terraform state in-memory prior to plan...' },
-          { type: 'output', text: '[aws_vpc.prod_vpc]: Refreshing state... [id=vpc-0d9223e7f]' },
-          { type: 'output', text: '' },
-          { type: 'output', text: 'Terraform will perform the following actions:' },
-          { type: 'output', text: '  + resource "aws_instance" "app_node" {' },
-          { type: 'output', text: '      + ami                          = "ami-0c55b159cbfafe1f0"' },
-          { type: 'output', text: '      + instance_type                = "t3.medium"' },
-          { type: 'output', text: '      + associate_public_ip_address = true' },
-          { type: 'output', text: '      + tags                         = { "Name" = "production-app-node" }' },
-          { type: 'output', text: '    }' },
-          { type: 'output', text: '  + resource "kubernetes_deployment" "api_server" {' },
-          { type: 'output', text: '      + spec { replicas = 3 }' },
-          { type: 'output', text: '    }' },
-          { type: 'output', text: '' },
-          { type: 'output', text: 'Plan: 2 to add, 0 to change, 0 to destroy.' },
-          { type: 'output', text: '------------------------------------------------------------' },
-          { type: 'output', text: '💡 Infrastructure checks out! Run simulated build in the pipeline simulator.' }
-        )
-        break
-      case 'k8s':
-        newHistory.push(
-          { type: 'output', text: '$ kubectl get pods -n production -o wide' },
-          { type: 'output', text: 'NAME                               READY   STATUS    RESTARTS   AGE    IP             NODE' },
-          { type: 'output', text: 'nwr-app-deploy-67fdc5885-2bxlk     1/1     Running   0          42d    10.244.0.122   k8s-node-1' },
-          { type: 'output', text: 'nwr-app-deploy-67fdc5885-9lmqs     1/1     Running   0          42d    10.244.1.84    k8s-node-2' },
-          { type: 'output', text: 'celebal-ops-worker-5cc9d74-xxp91   1/1     Running   1          14d    10.244.1.95    k8s-node-2' },
-          { type: 'output', text: '' },
-          { type: 'output', text: 'STATUS: cluster is HEALTHY | Pod Replicas: 3/3 active | LoadBalancer active' }
+          { type: 'output', text: '   Work:     Introduced track repair requests tracking portal for General Manager.' }
         )
         break
       case 'certs':
@@ -262,11 +307,6 @@ export default function App() {
           { type: 'output', text: '📜 Web Development Project Certification - NWR (May 2024)' },
           { type: 'output', text: '📜 C & C++ Programming Course Certificate - Swati Computers (Aug 2022)' }
         )
-        break
-      case 'matrix':
-        setShowMatrix(true)
-        setTimeout(() => setShowMatrix(false), 4000)
-        newHistory.push({ type: 'output', text: 'Matrix simulation complete.' })
         break
       case 'contact':
         newHistory.push(
@@ -296,10 +336,23 @@ export default function App() {
       [
         "Initializing pipeline workspace...",
         "Executing: git add .",
-        "Executing: git commit -m 'feat: update orchestration scripts'",
-        "Pushing commit to branch main...",
-        "GitHub Webhook triggered Jenkins server.",
-        "✅ Code integration stage complete."
+        "Executing: git commit -m 'feat: update testing coverage specs'",
+        "Pushing commit to main branch...",
+        "Webhook triggered Jenkins pipeline execution.",
+        "✅ Stage 01: Code committed & tracked."
+      ],
+      [
+        "Pipeline Step: Automated Testing & Verification Suite",
+        "Executing: python selenium_tests.py",
+        "Initializing Chrome headless Web Driver...",
+        "Running UI login checks... SUCCESS",
+        "Running track request submission checks... SUCCESS",
+        "Executing API checks via Postman: newman run nwr_api.json",
+        "GET /api/v1/requests: 200 OK (84ms) - Passed",
+        "POST /api/v1/requests: 201 Created (112ms) - Passed",
+        "Executing performance load tests: jmeter -n -t load_test.jmx",
+        "Active Threads: 500 | Error Rate: 0.00% | Avg Latency: 92ms",
+        "✅ Stage 02: All QA automation checks completed successfully. 100% assertions passed."
       ],
       [
         "Pipeline Step: Docker image compilation",
@@ -310,27 +363,18 @@ export default function App() {
         "Step 3/4 : RUN pip install --no-cache-dir -r /app/requirements.txt",
         "Step 4/4 : COPY . /app",
         "Successfully compiled container image. Tagged: aaravmathur/railway-app:v2",
-        "✅ Image pushed to Docker Hub registry."
+        "✅ Stage 03: Docker container packaged."
       ],
       [
-        "Pipeline Step: Terraform Infrastructure Deployment",
-        "Executing: terraform init",
-        "Initializing cloud providers (AWS, Azure)...",
-        "Executing: terraform apply -auto-approve",
-        "aws_instance.app_host: Creating...",
-        "aws_instance.app_host: Still creating... (10s elapsed)",
-        "aws_instance.app_host: Creation complete [id=i-9bca473ef2]",
-        "✅ Infrastructure deployment completed successfully."
-      ],
-      [
-        "Pipeline Step: Kubernetes Service Rollout",
-        "Executing: kubectl apply -f k8s/deployment.yaml",
-        "deployment.apps/nwr-app created",
-        "service/nwr-app-svc created",
-        "Executing: kubectl rollout status deployment/nwr-app",
-        "Waiting for 3 replicas to enter running state...",
-        "Replica 1: Running, Replica 2: Running, Replica 3: Running",
-        "✅ Service rollout completed. Application IP published."
+        "Pipeline Step: Cloud Cluster Release Management",
+        "Executing Ansible playbook: ansible-playbook deploy.yml",
+        "TASK [Gathering Facts] *********************************************************",
+        "TASK [Configure web servers in Azure Resource Group] ***************************",
+        "changed: [azure-vm-node-1] => { 'status': 'updated' }",
+        "changed: [azure-vm-node-2] => { 'status': 'updated' }",
+        "TASK [Deploy container stack] **************************************************",
+        "changed: [azure-vm-node-1] => { 'status': 'started' }",
+        "✅ Stage 04: Azure deployment successful. Web service active."
       ]
     ]
 
@@ -449,6 +493,7 @@ export default function App() {
             <a href="#experience" className="nav-link">Experience</a>
             <a href="#skills" className="nav-link">Skills</a>
             <a href="#pipeline" className="nav-link">DevOps Pipeline</a>
+            <a href="#qa" className="nav-link">QA Dashboard</a>
             <a href="#contact" className="nav-link">Contact</a>
             
             <button 
@@ -563,22 +608,10 @@ export default function App() {
           <h2>Interactive DevOps Terminal</h2>
         </div>
         <p className="section-subtitle">
-          An interactive Linux-like interface simulating real-time queries for Aarav's configurations. Enter commands like <code style={{ color: 'var(--accent-purple)' }}>help</code>, <code style={{ color: 'var(--accent-cyan)' }}>tfplan</code>, <code style={{ color: 'var(--accent-green)' }}>certs</code>, or <code style={{ color: 'var(--accent-amber)' }}>matrix</code>.
+          An interactive Linux-like interface simulating real-time queries for Aarav's configurations. Enter commands like <code style={{ color: 'var(--accent-purple)' }}>help</code>, <code style={{ color: 'var(--accent-cyan)' }}>skills</code>, <code style={{ color: 'var(--accent-green)' }}>internships</code>, or <code style={{ color: 'var(--accent-amber)' }}>certs</code>.
         </p>
 
         <div className="terminal-window">
-          {showMatrix && (
-            <div className="matrix-overlay">
-              <div style={{ color: '#10B981', fontFamily: 'monospace', fontSize: '1.2rem', textAlign: 'center', lineHeight: '1.4' }}>
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={i} style={{ animation: `pulse-border ${0.5 + i * 0.1}s infinite alternate` }}>
-                    {Array.from({ length: 30 }).map(() => Math.round(Math.random())).join(' ')}
-                  </div>
-                ))}
-                <div style={{ marginTop: '20px', fontWeight: 'bold', color: 'white' }}>SIMULATING CLOUD PIPELINE NETWORKS...</div>
-              </div>
-            </div>
-          )}
           <div className="terminal-header">
             <div className="terminal-buttons">
               <span className="terminal-dot red"></span>
@@ -781,14 +814,14 @@ export default function App() {
         </p>
 
         <div className="skills-grid">
-          {/* Cloud & Platform Card */}
+          {/* QA & Automation Frameworks */}
           <div className="skill-category-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-purple)', fontWeight: '700' }}>
-              <CloudIcon />
-              <h4>Cloud & Platform Networks</h4>
+              <CodeIcon />
+              <h4>QA & Automation Frameworks</h4>
             </div>
             <div className="skill-tags">
-              {["Amazon Web Service (AWS)", "Azure", "Linux"].map(skill => (
+              {["Jira", "Selenium", "Postman", "JMeter", "Appium"].map(skill => (
                 <button
                   key={skill}
                   onClick={() => setSelectedSkill({ name: skill, desc: skillDetails[skill] })}
@@ -800,14 +833,14 @@ export default function App() {
             </div>
           </div>
 
-          {/* Infrastructure & DevOps */}
+          {/* DevOps & Cloud Platforms */}
           <div className="skill-category-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-cyan)', fontWeight: '700' }}>
-              <CpuIcon />
-              <h4>Containers & Infrastructure</h4>
+              <CloudIcon />
+              <h4>DevOps & Cloud Platforms</h4>
             </div>
             <div className="skill-tags">
-              {["Kubernetes", "Docker", "Terraform", "Vagrant"].map(skill => (
+              {["Jenkins", "Ansible", "Azure", "AWS", "Docker", "Kubernetes", "Terraform", "Linux"].map(skill => (
                 <button
                   key={skill}
                   onClick={() => setSelectedSkill({ name: skill, desc: skillDetails[skill] })}
@@ -819,14 +852,14 @@ export default function App() {
             </div>
           </div>
 
-          {/* Development Automation */}
+          {/* Languages & Databases */}
           <div className="skill-category-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-green)', fontWeight: '700' }}>
-              <TerminalIcon />
-              <h4>Development & Pipelines</h4>
+              <CpuIcon />
+              <h4>Languages & Databases</h4>
             </div>
             <div className="skill-tags">
-              {["Python", "MySQL", "Jenkins", "GitHub", "Tomcat"].map(skill => (
+              {["Python", "MongoDB", "MySQL", "GitHub"].map(skill => (
                 <button
                   key={skill}
                   onClick={() => setSelectedSkill({ name: skill, desc: skillDetails[skill] })}
@@ -860,10 +893,10 @@ export default function App() {
           <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
-          <h2>Interactive DevOps Pipeline Simulator</h2>
+          <h2>Interactive DevOps & QA Deployment Pipeline</h2>
         </div>
         <p className="section-subtitle">
-          Trigger a simulated GitHub-to-Kubernetes CI/CD workflow. Watch logs compile and deploy, then interact with the successfully hosted live sandbox application!
+          Trigger a simulated GitHub-to-Azure CI/CD workflow. Watch automated Selenium, Postman, and JMeter testing run before deploying container packages on cloud servers.
         </p>
 
         <div className="pipeline-container">
@@ -872,7 +905,7 @@ export default function App() {
             <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '8px' }}>STAGE 01</div>
             <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>Git Commit</h4>
             <span style={{ fontSize: '0.75rem', color: pipelineStepsStatus[0] === 'success' ? 'var(--accent-green)' : 'var(--text-secondary)' }}>
-              {pipelineStepsStatus[0] === 'success' ? '✔ Pushed' : activePipelineStep === 0 ? '⚙ Running...' : 'Pending'}
+              {pipelineStepsStatus[0] === 'success' ? '✔ Pushed' : activePipelineStep === 0 ? '⚙ Pushing...' : 'Pending'}
             </span>
             <div className="pipeline-connector"></div>
           </div>
@@ -880,9 +913,9 @@ export default function App() {
           {/* Step 2 */}
           <div className={`pipeline-step ${pipelineStepsStatus[1]} ${activePipelineStep === 1 ? 'running' : ''}`}>
             <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '8px' }}>STAGE 02</div>
-            <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>Docker Build</h4>
+            <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>QA Testing</h4>
             <span style={{ fontSize: '0.75rem', color: pipelineStepsStatus[1] === 'success' ? 'var(--accent-green)' : 'var(--text-secondary)' }}>
-              {pipelineStepsStatus[1] === 'success' ? '✔ Packaged' : activePipelineStep === 1 ? '⚙ Building...' : 'Locked'}
+              {pipelineStepsStatus[1] === 'success' ? '✔ Passed' : activePipelineStep === 1 ? '⚙ Testing...' : 'Locked'}
             </span>
             <div className="pipeline-connector"></div>
           </div>
@@ -890,9 +923,9 @@ export default function App() {
           {/* Step 3 */}
           <div className={`pipeline-step ${pipelineStepsStatus[2]} ${activePipelineStep === 2 ? 'running' : ''}`}>
             <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '8px' }}>STAGE 03</div>
-            <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>Terraform IaC</h4>
+            <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>Docker Build</h4>
             <span style={{ fontSize: '0.75rem', color: pipelineStepsStatus[2] === 'success' ? 'var(--accent-green)' : 'var(--text-secondary)' }}>
-              {pipelineStepsStatus[2] === 'success' ? '✔ Provisioned' : activePipelineStep === 2 ? '⚙ Provisioning...' : 'Locked'}
+              {pipelineStepsStatus[2] === 'success' ? '✔ Packaged' : activePipelineStep === 2 ? '⚙ Building...' : 'Locked'}
             </span>
             <div className="pipeline-connector"></div>
           </div>
@@ -900,9 +933,9 @@ export default function App() {
           {/* Step 4 */}
           <div className={`pipeline-step ${pipelineStepsStatus[3]} ${activePipelineStep === 3 ? 'running' : ''}`}>
             <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '8px' }}>STAGE 04</div>
-            <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>K8s Deploy</h4>
+            <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>Azure Deploy</h4>
             <span style={{ fontSize: '0.75rem', color: pipelineStepsStatus[3] === 'success' ? 'var(--accent-green)' : 'var(--text-secondary)' }}>
-              {pipelineStepsStatus[3] === 'success' ? '✔ Scheduled' : activePipelineStep === 3 ? '⚙ Rollout...' : 'Locked'}
+              {pipelineStepsStatus[3] === 'success' ? '✔ Released' : activePipelineStep === 3 ? '⚙ Deploying...' : 'Locked'}
             </span>
           </div>
         </div>
@@ -1201,6 +1234,147 @@ export default function App() {
             </div>
           </div>
         )}
+      </section>
+
+      {/* Main Divider Ticks */}
+      <div className="ticks" style={{ height: '1px', borderTop: '1px solid var(--border-color)', margin: '40px 0' }}></div>
+
+      {/* QA & Test Automation Suite Section */}
+      <section className="section" id="qa">
+        <div className="section-title">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h2>Interactive QA & Test Automation Suite</h2>
+        </div>
+        <p className="section-subtitle">
+          Aarav is expanding his skills into Quality Assurance (QA). Explore and run simulated testing scripts below for UI automation, API assertions, and performance load profiling.
+        </p>
+
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Tab Selection Row */}
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', gap: '16px', paddingBottom: '8px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setQaActiveTab('selenium')}
+              style={{
+                background: 'none',
+                border: 'none',
+                borderBottom: qaActiveTab === 'selenium' ? '2px solid var(--accent-purple)' : '2px solid transparent',
+                color: qaActiveTab === 'selenium' ? 'var(--text-primary)' : 'var(--text-muted)',
+                fontWeight: '600',
+                padding: '8px 16px',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              🧪 Selenium (UI Automation)
+            </button>
+            <button
+              onClick={() => setQaActiveTab('postman')}
+              style={{
+                background: 'none',
+                border: 'none',
+                borderBottom: qaActiveTab === 'postman' ? '2px solid var(--accent-purple)' : '2px solid transparent',
+                color: qaActiveTab === 'postman' ? 'var(--text-primary)' : 'var(--text-muted)',
+                fontWeight: '600',
+                padding: '8px 16px',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              📮 Postman (API Verification)
+            </button>
+            <button
+              onClick={() => setQaActiveTab('jmeter')}
+              style={{
+                background: 'none',
+                border: 'none',
+                borderBottom: qaActiveTab === 'jmeter' ? '2px solid var(--accent-purple)' : '2px solid transparent',
+                color: qaActiveTab === 'jmeter' ? 'var(--text-primary)' : 'var(--text-muted)',
+                fontWeight: '600',
+                padding: '8px 16px',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              📈 JMeter (Performance Benchmarks)
+            </button>
+          </div>
+
+          {/* Test Controls & Runner Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', alignItems: 'start' }}>
+            {/* Left Box: Test Information & Actions */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <h4 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>
+                  {qaActiveTab === 'selenium' ? 'Selenium Web UI WebDriver' : qaActiveTab === 'postman' ? 'Postman Newman Runner' : 'JMeter Load Testing Tool'}
+                </h4>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  {qaActiveTab === 'selenium' 
+                    ? 'Simulate a headless browser launch executing functional UI checks for login state bindings and track diversion application workflows.'
+                    : qaActiveTab === 'postman'
+                    ? 'Verify RESTful API endpoints by running Newman scripts checking JSON payloads response bodies and HTTP status schemas.'
+                    : 'Analyze host resource bottlenecks by launching a load benchmark scaling concurrent active HTTP connection threads.'
+                  }
+                </p>
+              </div>
+
+              {/* Status details card */}
+              <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Execution Status:</span>
+                  <strong style={{ color: qaTestStatus === 'success' ? 'var(--accent-green)' : qaTestStatus === 'running' ? 'var(--accent-amber)' : 'inherit' }}>
+                    {qaTestStatus === 'success' ? '✔ PASSED' : qaTestStatus === 'running' ? '⚙ Running...' : 'Ready'}
+                  </strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Target Engine:</span>
+                  <strong>{qaActiveTab === 'selenium' ? 'Chrome WebDriver (Python)' : qaActiveTab === 'postman' ? 'Newman CLI (NodeJS)' : 'JMeter CLI (Java)'}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Project Scope:</span>
+                  <strong>NWR Railway Application</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Jira Ticket Ref:</span>
+                  <span style={{ textDecoration: 'underline', cursor: 'pointer', color: 'var(--accent-cyan)' }}>QA-244</span>
+                </div>
+              </div>
+
+              <button
+                onClick={runQaTestSuite}
+                disabled={qaTestStatus === 'running'}
+                className="btn-primary"
+                style={{ justifyContent: 'center', width: '100%', padding: '12px' }}
+              >
+                {qaTestStatus === 'running' ? 'Running Test Suites...' : 'Execute Test Suite'}
+              </button>
+            </div>
+
+            {/* Right Box: Live Log Console Window */}
+            <div>
+              <div className="terminal-window">
+                <div className="terminal-header" style={{ padding: '8px 12px' }}>
+                  <div className="terminal-title">Runner: {qaActiveTab}_tests.log</div>
+                  {qaProgress > 0 && <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>{qaProgress}%</span>}
+                </div>
+                {/* Progress bar overlay if running */}
+                {qaTestStatus === 'running' && (
+                  <div style={{ width: '100%', height: '2px', background: 'var(--border-color)', position: 'relative' }}>
+                    <div style={{ width: `${qaProgress}%`, height: '100%', background: 'var(--accent-purple)', transition: 'width 0.2s ease' }}></div>
+                  </div>
+                )}
+                <div className="terminal-body" style={{ height: '260px', padding: '12px', fontSize: '0.82rem', gap: '6px' }}>
+                  {qaLogs.map((log, index) => (
+                    <div key={index} className="terminal-line" style={{ color: log.startsWith('✔') || log.startsWith('🎉') || log.includes('SUCCESS') ? 'var(--accent-green)' : log.startsWith('⚡') ? 'var(--accent-purple)' : 'inherit' }}>
+                      {log}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Main Divider Ticks */}
