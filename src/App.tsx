@@ -222,7 +222,7 @@ export default function App() {
     "Kubernetes": "Orchestrated container cluster workloads, pod scaling schedules, and services mappings in multi-cloud configurations.",
     "Docker": "Used for containerizing web microservices. Created multi-stage Dockerfiles to minimize image sizes.",
     "Terraform": "Utilized Infrastructure as Code (IaC) templates to provision resources on Azure and AWS cloud setups.",
-    "Amazon Web Service (AWS)": "Experience handling EC2 instances, S3 storage, IAM routing, and virtual networks.",
+    "AWS": "Experience handling EC2 instances, S3 storage, IAM routing, and virtual networks.",
     "Azure": "Managed Azure virtual machines, resource groups, and storage interfaces for scalable deployments.",
     "Python": "Primary language for writing Selenium automation suites, API scripts, and scripting DevOps configurations.",
     "MySQL": "Relational database query tuning, table index configurations, and credentials setup.",
