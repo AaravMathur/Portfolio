@@ -21,16 +21,15 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: './Portfolio/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
 
       - name: Install and Build 🔧
         run: |
-          cd Portfolio
           npm ci
           npm run build
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: Portfolio/dist
+          folder: dist
           branch: gh-pages
