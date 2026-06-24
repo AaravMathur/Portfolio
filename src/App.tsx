@@ -460,7 +460,7 @@ export default function App() {
             </button>
             
             <a 
-              href="/resume.pdf" 
+              href={`${import.meta.env.BASE_URL}resume.pdf`}
               download="Aarav_Mathur_Resume.pdf"
               className="btn-primary"
               style={{ padding: '8px 16px', fontSize: '0.9rem' }}
@@ -535,7 +535,7 @@ export default function App() {
           }}></div>
           
           <img 
-            src="/avatar.jpg" 
+            src={`${import.meta.env.BASE_URL}avatar.jpg`} 
             alt="Aarav Mathur DevOps Illustration" 
             className="animate-float"
             style={{ 
@@ -1294,7 +1294,7 @@ export default function App() {
               <ArrowUpRightIcon />
             </a>
             <a 
-              href="/resume.pdf" 
+              href={`${import.meta.env.BASE_URL}resume.pdf`}
               download="Aarav_Mathur_Resume.pdf"
               className="btn-secondary"
               style={{ padding: '8px 16px', fontSize: '0.85rem' }}

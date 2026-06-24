@@ -551,7 +551,7 @@ a {
 
 .nav-links {
   display: flex;
-  gap: 32px;
+  gap: 18px;
   align-items: center;
 }
 
@@ -601,8 +601,15 @@ a {
   color: var(--text-primary);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
+  .header-container {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 5%;
+  }
   .nav-links {
-    display: none;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
