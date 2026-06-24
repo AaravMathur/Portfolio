@@ -300,6 +300,8 @@ export default function App() {
         newHistory.push(
           { type: 'output', text: 'Aarav\'s Tech Certifications & Professional Training:' },
           { type: 'output', text: '============================================================' },
+          { type: 'output', text: '📜 Learn Selenium with Python, PyTest & Frameworks - Udemy (Jan 2026)' },
+          { type: 'output', text: '📜 Python for Beginners Course - Udemy / Makeintern (Jan 2026)' },
           { type: 'output', text: '📜 DevOps Cloud Infrastructure Management & Operations - Celebal Tech (2025)' },
           { type: 'output', text: '📜 DevOps Integrated with AI Certificate - Coursera (Sept 2025)' },
           { type: 'output', text: '📜 Docker & Jenkins Course Certificate - Infosys (July 2025)' },
@@ -539,7 +541,7 @@ export default function App() {
           {/* Quick Metrics */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
             <div className="glass-card" style={{ padding: '16px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--accent-purple)' }}>6+</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--accent-purple)' }}>8+</div>
               <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Tech Certifications</div>
             </div>
             <div className="glass-card" style={{ padding: '16px', textAlign: 'center' }}>
@@ -771,6 +773,14 @@ export default function App() {
           <div>
             <h3 style={{ fontSize: '1.6rem', marginBottom: '24px' }}>Certifications & Training</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="glass-card" style={{ padding: '16px', borderLeft: '3px solid var(--accent-purple)' }}>
+                <h4 style={{ fontSize: '1.05rem', margin: 0 }}>Learn Selenium with Python, PyTest & Frameworks</h4>
+                <div style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', marginTop: '4px' }}>Udemy (Pavan Kumar) | Jan 2026 | 46.5 Hours</div>
+              </div>
+              <div className="glass-card" style={{ padding: '16px', borderLeft: '3px solid var(--accent-purple)' }}>
+                <h4 style={{ fontSize: '1.05rem', margin: 0 }}>Python for Beginners</h4>
+                <div style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', marginTop: '4px' }}>Udemy (Makeintern Course) | Jan 2026 | 2.5 Hours</div>
+              </div>
               <div className="glass-card" style={{ padding: '16px', borderLeft: '3px solid var(--accent-purple)' }}>
                 <h4 style={{ fontSize: '1.05rem', margin: 0 }}>DevOps Cloud Infrastructure Management</h4>
                 <div style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', marginTop: '4px' }}>Celebal Technologies (Docker & Azure Project Training) | 2025</div>
