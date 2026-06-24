@@ -126,17 +126,24 @@ export default function App() {
 
   // QA Dashboard State
   const [qaActiveTab, setQaActiveTab] = useState<'selenium' | 'postman' | 'jmeter'>('selenium')
-  const [qaTestStatus, setQaTestStatus] = useState<'idle' | 'running' | 'success'>('idle')
+  const [qaTestStatus, setQaTestStatus] = useState<'idle' | 'running' | 'success' | 'failure'>('idle')
   const [qaProgress, setQaProgress] = useState<number>(0)
   const [qaLogs, setQaLogs] = useState<string[]>(["Select a test suite and click 'Execute Test Suite' above."])
   const [qaSeleniumUrl, setQaSeleniumUrl] = useState<string>('https://example.com')
   const [qaPostmanUrl, setQaPostmanUrl] = useState<string>('https://jsonplaceholder.typicode.com/todos/1')
   const [qaJmeterUrl, setQaJmeterUrl] = useState<string>('https://example.com')
+  const [seleniumTestOutcome, setSeleniumTestOutcome] = useState<'success' | 'failure'>('success')
+  const [seleniumCurrentStep, setSeleniumCurrentStep] = useState<number>(0)
+  const [seleniumUserVal, setSeleniumUserVal] = useState<string>('')
+  const [seleniumPassVal, setSeleniumPassVal] = useState<string>('')
 
   // Reset QA logs when active tab changes
   useEffect(() => {
     setQaTestStatus('idle')
     setQaProgress(0)
+    setSeleniumCurrentStep(0)
+    setSeleniumUserVal('')
+    setSeleniumPassVal('')
     setQaLogs([`Ready to run ${qaActiveTab === 'selenium' ? 'Selenium UI WebDriver' : qaActiveTab === 'postman' ? 'Postman Newman API' : 'JMeter Load Performance'} test suite.`])
   }, [qaActiveTab])
 
@@ -146,39 +153,100 @@ export default function App() {
     setQaLogs([])
 
     if (qaActiveTab === 'selenium') {
-      const rawUrl = qaSeleniumUrl.trim() || 'https://example.com'
-      const targetUrl = rawUrl.startsWith('http://') || rawUrl.startsWith('https://') ? rawUrl : `https://${rawUrl}`
-      let hostname = 'example.com'
-      try {
-        hostname = new URL(targetUrl).hostname
-      } catch (e) {
-        hostname = targetUrl
-      }
+      setSeleniumCurrentStep(1)
+      setSeleniumUserVal('')
+      setSeleniumPassVal('')
 
-      const logs = [
-        "⚡ Starting Selenium UI Automation task...",
-        "📦 Initializing chromedriver binary inside local container headless configuration...",
-        `🌐 Web Driver navigating to: ${targetUrl}`,
-        "🔍 Scanning document body for interactive element anchors...",
-        `✔ Base DOM loaded. Host name resolved: "${hostname}"`,
-        "🖱️ Simulating scroll coordinates to verify responsive UI boundaries...",
-        "⌨ Scanning input fields and testing validation filters...",
-        "⌛ Awaiting asynchronous event loop callbacks...",
-        `✔ Page Title asserted: "${hostname.split('.')[0].toUpperCase()} Homepage"`,
-        "🧪 Assertion 01: Response status returned code HTTP 200 [PASSED]",
-        "🧪 Assertion 02: Document body height is non-zero [PASSED]",
-        "🧪 Assertion 03: SSL certificate check on server [PASSED]",
-        "🧹 Releasing webdriver resources and closing active Chromium instance.",
-        `🎉 SUCCESS: Selenium UI test suite executed on ${hostname} with 100% assertions passed!`
+      const step1Logs = [
+        "⚡ Starting Selenium UI Automation task on OrangeHRM...",
+        "📦 Loading chromedriver executable for Chromium browser v122...",
+        "🌐 Launching Chrome Web Browser (Headless Mode: False)...",
+        "🌐 WebDriver connecting to: https://opensource-demo.orangehrmlive.com/web/auth/login",
+        "🔍 Scanning page layout for DOM selector targets...",
+        "✔ Found login element fields: name='username', name='password', type='submit'"
       ]
 
-      for (let i = 0; i < logs.length; i++) {
-        setQaLogs(prev => [...prev, logs[i]])
-        setQaProgress(Math.min(100, Math.round(((i + 1) / logs.length) * 100)))
+      for (let i = 0; i < step1Logs.length; i++) {
+        setQaLogs(prev => [...prev, step1Logs[i]])
+        setQaProgress(Math.round(((i + 1) / 20) * 100))
         await new Promise(resolve => setTimeout(resolve, 300))
       }
 
-      setQaTestStatus('success')
+      // Step 2: Move cursor to username and type it
+      setSeleniumCurrentStep(2)
+      setQaLogs(prev => [...prev, "🖱️ Action: Moving mouse cursor to Username input node..."])
+      await new Promise(resolve => setTimeout(resolve, 600))
+      
+      const usernameText = "Admin"
+      let userTyped = ""
+      for (let char of usernameText) {
+        userTyped += char
+        setSeleniumUserVal(userTyped)
+        await new Promise(resolve => setTimeout(resolve, 150))
+      }
+      setQaLogs(prev => [...prev, "⌨ Action: Typing characters: A, d, m, i, n..."])
+      await new Promise(resolve => setTimeout(resolve, 400))
+
+      // Step 3: Move cursor to password and type it
+      setSeleniumCurrentStep(3)
+      setQaLogs(prev => [...prev, "🖱️ Action: Moving mouse cursor to Password input node..."])
+      await new Promise(resolve => setTimeout(resolve, 600))
+
+      const passwordText = seleniumTestOutcome === 'success' ? "admin123" : "wrong123"
+      let passTyped = ""
+      for (let char of passwordText) {
+        passTyped += char
+        setSeleniumPassVal(passTyped)
+        await new Promise(resolve => setTimeout(resolve, 150))
+      }
+      setQaLogs(prev => [
+        ...prev, 
+        seleniumTestOutcome === 'success' 
+          ? "⌨ Action: Typing characters: a, d, m, i, n, 1, 2, 3..." 
+          : "⌨ Action: Typing characters: w, r, o, n, g, 1, 2, 3..."
+      ])
+      await new Promise(resolve => setTimeout(resolve, 400))
+
+      // Step 4: Click Login button
+      setSeleniumCurrentStep(4)
+      setQaLogs(prev => [
+        ...prev,
+        "🖱️ Action: Moving mouse cursor to Login submit button...",
+        "🖱️ Action: Triggering element click event..."
+      ])
+      setQaProgress(75)
+      await new Promise(resolve => setTimeout(resolve, 800))
+
+      // Step 5: Redirect and outcome
+      setSeleniumCurrentStep(5)
+      setQaLogs(prev => [...prev, "⌛ Awaiting server authentication redirect validation..."])
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      if (seleniumTestOutcome === 'success') {
+        setQaLogs(prev => [
+          ...prev,
+          "✔ Browser URL changed to: https://opensource-demo.orangehrmlive.com/web/dashboard",
+          "🧪 Assertion 01: Profile welcome avatar matches 'Admin' [PASSED]",
+          "🧪 Assertion 02: Quick Launch card elements are visible [PASSED]",
+          "🧹 Releasing chromedriver process handles and shutting down browser...",
+          "🎉 SUCCESS: Selenium UI test suite executed on OrangeHRM with 100% assertions passed!"
+        ])
+        setQaProgress(100)
+        setQaTestStatus('success')
+      } else {
+        setQaLogs(prev => [
+          ...prev,
+          "⚠️ Red validation alert banner caught: 'Invalid credentials'",
+          "❌ Browser URL remained on: https://opensource-demo.orangehrmlive.com/web/auth/login",
+          "🧪 Assertion 01: Expected redirect to containing '/dashboard', but remained on '/login' [FAILED]",
+          "🧹 Capturing error page screenshot: failure_screenshot_login_fail.png",
+          "🧹 Releasing chromedriver process handles and shutting down browser...",
+          "❌ AssertionError: Welcome banner element not found. UI login verification failed!",
+          "❌ Process finished with exit code 1"
+        ])
+        setQaProgress(100)
+        setQaTestStatus('failure')
+      }
     } else if (qaActiveTab === 'postman') {
       const rawUrl = qaPostmanUrl.trim() || 'https://jsonplaceholder.typicode.com/todos/1'
       const targetUrl = rawUrl.startsWith('http://') || rawUrl.startsWith('https://') ? rawUrl : `https://${rawUrl}`
@@ -1615,12 +1683,47 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Test Path Selector for Selenium */}
+              {qaActiveTab === 'selenium' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                    🛠️ Simulation Test Flow Path
+                  </label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', background: seleniumTestOutcome === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-tertiary)', border: seleniumTestOutcome === 'success' ? '1px solid var(--accent-green)' : '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', transition: 'all 0.2s' }}>
+                      <input
+                        type="radio"
+                        name="testOutcome"
+                        value="success"
+                        checked={seleniumTestOutcome === 'success'}
+                        onChange={() => setSeleniumTestOutcome('success')}
+                        disabled={qaTestStatus === 'running'}
+                        style={{ accentColor: 'var(--accent-green)' }}
+                      />
+                      <span style={{ color: seleniumTestOutcome === 'success' ? 'var(--accent-green)' : 'inherit' }}>Success (Pass)</span>
+                    </label>
+                    <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', background: seleniumTestOutcome === 'failure' ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-tertiary)', border: seleniumTestOutcome === 'failure' ? '1px solid var(--accent-red)' : '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', transition: 'all 0.2s' }}>
+                      <input
+                        type="radio"
+                        name="testOutcome"
+                        value="failure"
+                        checked={seleniumTestOutcome === 'failure'}
+                        onChange={() => setSeleniumTestOutcome('failure')}
+                        disabled={qaTestStatus === 'running'}
+                        style={{ accentColor: 'var(--accent-red)' }}
+                      />
+                      <span style={{ color: seleniumTestOutcome === 'failure' ? 'var(--accent-red)' : 'inherit' }}>Failure (Catch Bug)</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
               {/* Status details card */}
               <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                   <span style={{ color: 'var(--text-secondary)' }}>Execution Status:</span>
-                  <strong style={{ color: qaTestStatus === 'success' ? 'var(--accent-green)' : qaTestStatus === 'running' ? 'var(--accent-amber)' : 'inherit' }}>
-                    {qaTestStatus === 'success' ? '✔ PASSED' : qaTestStatus === 'running' ? '⚙ Running...' : 'Ready'}
+                  <strong style={{ color: qaTestStatus === 'success' ? 'var(--accent-green)' : qaTestStatus === 'running' ? 'var(--accent-amber)' : qaTestStatus === 'failure' ? 'var(--accent-red)' : 'inherit' }}>
+                    {qaTestStatus === 'success' ? '✔ PASSED' : qaTestStatus === 'running' ? '⚙ Running...' : qaTestStatus === 'failure' ? '❌ FAILED' : 'Ready'}
                   </strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
@@ -1647,8 +1750,10 @@ export default function App() {
               </button>
             </div>
 
-            {/* Right Box: Live Log Console Window */}
-            <div>
+            {/* Right Box: Live Log Console Window & Browser Simulation */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              
+              {/* Log Console */}
               <div className="terminal-window">
                 <div className="terminal-header" style={{ padding: '8px 12px' }}>
                   <div className="terminal-title">Runner: {qaActiveTab}_tests.log</div>
@@ -1660,14 +1765,195 @@ export default function App() {
                     <div style={{ width: `${qaProgress}%`, height: '100%', background: 'var(--accent-purple)', transition: 'width 0.2s ease' }}></div>
                   </div>
                 )}
-                <div className="terminal-body" style={{ height: '260px', padding: '12px', fontSize: '0.82rem', gap: '6px' }}>
+                <div className="terminal-body" style={{ height: '200px', padding: '12px', fontSize: '0.82rem', gap: '6px' }}>
                   {qaLogs.map((log, index) => (
-                    <div key={index} className="terminal-line" style={{ color: log.startsWith('✔') || log.startsWith('🎉') || log.includes('SUCCESS') ? 'var(--accent-green)' : log.startsWith('⚡') ? 'var(--accent-purple)' : 'inherit' }}>
+                    <div key={index} className="terminal-line" style={{ color: log.startsWith('✔') || log.startsWith('🎉') || log.includes('SUCCESS') || log.includes('[PASSED]') ? 'var(--accent-green)' : log.startsWith('❌') || log.includes('[FAILED]') || log.startsWith('⚠️') || log.includes('AssertionError') || log.includes('exit code 1') ? 'var(--accent-red)' : log.startsWith('⚡') ? 'var(--accent-purple)' : 'inherit' }}>
                       {log}
                     </div>
                   ))}
                 </div>
               </div>
+
+              {/* Visual Browser Mockup (Only for Selenium UI Tab) */}
+              {qaActiveTab === 'selenium' && (
+                <div className="terminal-window" style={{ border: '1px solid var(--border-color)', background: '#f4f6f9', color: '#333' }}>
+                  {/* Browser Window Header */}
+                  <div style={{ background: '#e0e4ec', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #d0d4dc' }}>
+                    {/* Window Controls */}
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f56', display: 'inline-block' }}></span>
+                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ffbd2e', display: 'inline-block' }}></span>
+                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#27c93f', display: 'inline-block' }}></span>
+                    </div>
+                    {/* Address bar */}
+                    <div style={{ background: 'white', flex: 1, borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem', color: '#666', border: '1px solid #ccd0d8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>🔒</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {seleniumCurrentStep === 0 ? 'about:blank' : 'https://opensource-demo.orangehrmlive.com/web/index.php/auth/login'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Browser Page Viewport */}
+                  <div style={{ height: '330px', background: '#fff', position: 'relative', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', fontFamily: '"Inter", sans-serif' }}>
+                    {seleniumCurrentStep === 0 ? (
+                      /* Idle Screen */
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center', color: '#777' }}>
+                        <div style={{ fontSize: '2.5rem' }}>🌐</div>
+                        <div>
+                          <div style={{ fontWeight: '700', fontSize: '0.95rem', color: '#444' }}>Chromium Browser Session Offline</div>
+                          <div style={{ fontSize: '0.8rem', marginTop: '4px' }}>Click "Execute Test Suite" to boot Web Driver.</div>
+                        </div>
+                      </div>
+                    ) : seleniumCurrentStep === 5 && seleniumTestOutcome === 'success' ? (
+                      /* Dashboard Screen (Success) */
+                      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px', boxSizing: 'border-box', color: '#2c3e50' }}>
+                        {/* Top bar */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#f35d0b' }}>OrangeHRM Dashboard</span>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(39, 201, 63, 0.1)', border: '1px solid #27c93f', borderRadius: '20px', padding: '2px 8px', fontSize: '0.7rem', color: '#27c93f', fontWeight: 'bold' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#27c93f' }}></span>
+                            Welcome Admin
+                          </div>
+                        </div>
+                        {/* Content Cards */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '8px' }}>
+                          <div style={{ background: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '6px', padding: '10px' }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6c757d' }}>Quick Launch</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#0366d6' }}>📝 Leave List</span>
+                              <span style={{ fontSize: '0.7rem', color: '#0366d6' }}>⏳ Timesheets</span>
+                              <span style={{ fontSize: '0.7rem', color: '#0366d6' }}>👤 My Info</span>
+                            </div>
+                          </div>
+                          <div style={{ background: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '6px', padding: '10px', position: 'relative' }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6c757d' }}>Time at Work</div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: '800', marginTop: '6px', color: '#333' }}>08h 12m</div>
+                            <div style={{ fontSize: '0.65rem', color: '#28a745', marginTop: '2px' }}>Punched In</div>
+                          </div>
+                        </div>
+                        {/* Assertion Rings */}
+                        <div style={{ border: '1px dashed #27c93f', background: 'rgba(39, 201, 63, 0.05)', padding: '6px 10px', borderRadius: '6px', fontSize: '0.75rem', color: '#1e7e34', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>✔</span>
+                          <strong>Assertion Checked:</strong> Dashboard elements loaded successfully.
+                        </div>
+                      </div>
+                    ) : (
+                      /* OrangeHRM Login Screen (Typing steps 1-4 and Failure State 5) */
+                      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', boxSizing: 'border-box' }}>
+                        {/* Logo */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ fontSize: '1.4rem' }}>🍊</span>
+                            <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#222' }}>orange<span style={{ color: '#4caf50' }}>HRM</span></span>
+                          </div>
+                          <span style={{ fontSize: '0.55rem', letterSpacing: '0.5px', color: '#777', textTransform: 'uppercase' }}>Open Source HR Management</span>
+                        </div>
+ 
+                        {/* Login Container Box */}
+                        <div style={{ width: '100%', maxWidth: '210px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {/* Fail Warning Alert */}
+                          {seleniumCurrentStep === 5 && seleniumTestOutcome === 'failure' && (
+                            <div style={{ background: '#fdf2f2', border: '1px solid #fde8e8', color: '#de350b', padding: '6px 8px', borderRadius: '4px', fontSize: '0.7rem', textAlign: 'center', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                              <span>⚠</span>
+                              <span>Invalid credentials</span>
+                            </div>
+                          )}
+ 
+                          {/* Credentials Hint Banner */}
+                          <div style={{ background: '#eaedf2', padding: '6px 10px', borderRadius: '4px', fontSize: '0.68rem', color: '#4a5568' }}>
+                            <div>Username : Admin</div>
+                            <div>Password : admin123</div>
+                          </div>
+ 
+                          {/* Form Input fields */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div style={{ position: 'relative' }}>
+                              <input
+                                type="text"
+                                value={seleniumUserVal}
+                                placeholder="Username"
+                                readOnly
+                                style={{ width: '100%', padding: '6px 8px 6px 22px', fontSize: '0.75rem', border: seleniumCurrentStep === 2 ? '1px solid #f35d0b' : '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', outline: 'none', background: '#fafafa' }}
+                              />
+                              <span style={{ position: 'absolute', left: '6px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', opacity: '0.5' }}>👤</span>
+                            </div>
+                            <div style={{ position: 'relative' }}>
+                              <input
+                                type="password"
+                                value={seleniumPassVal}
+                                placeholder="Password"
+                                readOnly
+                                style={{ width: '100%', padding: '6px 8px 6px 22px', fontSize: '0.75rem', border: seleniumCurrentStep === 3 ? '1px solid #f35d0b' : '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', outline: 'none', background: '#fafafa' }}
+                              />
+                              <span style={{ position: 'absolute', left: '6px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', opacity: '0.5' }}>🔑</span>
+                            </div>
+                          </div>
+ 
+                          {/* Submit button */}
+                          <button
+                            type="button"
+                            style={{
+                              background: seleniumCurrentStep === 4 ? '#d8520a' : '#f35d0b',
+                              color: 'white',
+                              border: 'none',
+                              padding: '8px',
+                              borderRadius: '4px',
+                              fontWeight: 'bold',
+                              fontSize: '0.75rem',
+                              cursor: 'pointer',
+                              width: '100%',
+                              transition: 'background 0.2s',
+                              transform: seleniumCurrentStep === 4 ? 'scale(0.98)' : 'none'
+                            }}
+                          >
+                            Login
+                          </button>
+                        </div>
+ 
+                        {/* Footer text */}
+                        <div style={{ fontSize: '0.55rem', color: '#888', textAlign: 'center' }}>
+                          OrangeHRM OS 5.8 © 2005 - 2026 OrangeHRM, Inc.
+                        </div>
+                      </div>
+                    )}
+ 
+                    {/* Animated Mouse Cursor */}
+                    {seleniumCurrentStep > 0 && seleniumCurrentStep < 5 && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          width: '14px',
+                          height: '14px',
+                          zIndex: 999,
+                          pointerEvents: 'none',
+                          fontSize: '1.2rem',
+                          lineHeight: '1',
+                          transition: 'all 0.7s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                          top:
+                            seleniumCurrentStep === 1
+                              ? '80%' // loading
+                              : seleniumCurrentStep === 2
+                              ? '45%' // username
+                              : seleniumCurrentStep === 3
+                              ? '53%' // password
+                              : '67%', // button click (step 4)
+                          left:
+                            seleniumCurrentStep === 1
+                              ? '80%'
+                              : seleniumCurrentStep === 2
+                              ? '48%'
+                              : seleniumCurrentStep === 3
+                              ? '48%'
+                              : '52%'
+                        }}
+                      >
+                        ↖️
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
