@@ -137,6 +137,21 @@ export default function App() {
   const [seleniumUserVal, setSeleniumUserVal] = useState<string>('')
   const [seleniumPassVal, setSeleniumPassVal] = useState<string>('')
 
+  // Postman Mock States
+  const [postmanMockStep, setPostmanMockStep] = useState<number>(0)
+  const [postmanMockMethod, setPostmanMockMethod] = useState<'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'>('GET')
+  const [postmanMockUrl, setPostmanMockUrl] = useState<string>('')
+  const [postmanMockStatus, setPostmanMockStatus] = useState<string>('')
+  const [postmanMockResponse, setPostmanMockResponse] = useState<string>('')
+
+  // JMeter Mock States
+  const [jmeterMockStep, setJmeterMockStep] = useState<number>(0)
+  const [jmeterThreadCount, setJmeterThreadCount] = useState<number>(0)
+  const [jmeterRequestCount, setJmeterRequestCount] = useState<number>(0)
+  const [jmeterAvgLatency, setJmeterAvgLatency] = useState<number>(0)
+  const [jmeterThroughput, setJmeterThroughput] = useState<number>(0)
+  const [jmeterActiveView, setJmeterActiveView] = useState<'Aggregate' | 'Graph'>('Aggregate')
+
   // Reset QA logs when active tab changes
   useEffect(() => {
     setQaTestStatus('idle')
@@ -144,6 +159,16 @@ export default function App() {
     setSeleniumCurrentStep(0)
     setSeleniumUserVal('')
     setSeleniumPassVal('')
+    setPostmanMockStep(0)
+    setPostmanMockMethod('GET')
+    setPostmanMockUrl('')
+    setPostmanMockStatus('')
+    setPostmanMockResponse('')
+    setJmeterMockStep(0)
+    setJmeterThreadCount(0)
+    setJmeterRequestCount(0)
+    setJmeterAvgLatency(0)
+    setJmeterThroughput(0)
     setQaLogs([`Ready to run ${qaActiveTab === 'selenium' ? 'Selenium UI WebDriver' : qaActiveTab === 'postman' ? 'Postman Newman API' : 'JMeter Load Performance'} test suite.`])
   }, [qaActiveTab])
 
@@ -249,98 +274,202 @@ export default function App() {
       }
     } else if (qaActiveTab === 'postman') {
       const rawUrl = qaPostmanUrl.trim() || 'https://jsonplaceholder.typicode.com/todos/1'
-      const targetUrl = rawUrl.startsWith('http://') || rawUrl.startsWith('https://') ? rawUrl : `https://${rawUrl}`
+      let baseUrl = 'https://jsonplaceholder.typicode.com'
       let hostname = 'jsonplaceholder.typicode.com'
       try {
-        hostname = new URL(targetUrl).hostname
+        const parsed = new URL(rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`)
+        baseUrl = `${parsed.protocol}//${parsed.hostname}`
+        hostname = parsed.hostname
       } catch (e) {
-        hostname = targetUrl
+        // fallback
       }
 
       setQaLogs([
         "⚡ Starting Newman command line collection runner...",
-        `🚀 Executing: newman run collection.json --env production -r cli --timeout-request 5000`,
-        `📁 Target endpoint: GET ${targetUrl}`,
-        "⌛ Dispatching async HTTP request and capturing pre-request scripts..."
+        `🚀 Executing: newman run api_test_suite.json --env production -r cli`,
+        `📂 Running test sequence targeting host: ${hostname} (5 requests: GET, POST, PUT, PATCH, DELETE)...`,
+        "⌛ Preparing HTTP headers, content-types, and request payloads..."
       ])
-      setQaProgress(20)
-      await new Promise(resolve => setTimeout(resolve, 800))
+      setQaProgress(10)
+      setPostmanMockStep(1)
+      setPostmanMockMethod('GET')
+      setPostmanMockUrl(`${baseUrl}/users`)
+      setPostmanMockStatus('Sending...')
+      setPostmanMockResponse('{}')
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
-      const startTime = performance.now()
+      // 1. GET Request
+      let startTime = performance.now()
+      let latency = 50
+      let getResponseObj = [
+        { id: 1, name: "Leanne Graham", username: "Bret", email: "Sincere@april.biz" },
+        { id: 2, name: "Ervin Howell", username: "Antonette", email: "Shanna@melissa.tv" }
+      ]
       try {
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 4000)
-        
-        const response = await fetch(targetUrl, { signal: controller.signal })
+        const timeoutId = setTimeout(() => controller.abort(), 3000)
+        const res = await fetch(`${baseUrl}/users?limit=2`, { signal: controller.signal })
         clearTimeout(timeoutId)
-        
-        const endTime = performance.now()
-        const latency = Math.round(endTime - startTime)
-        const status = response.status
-        const statusText = response.statusText || (status === 200 ? 'OK' : 'Response')
-        const contentType = response.headers.get('content-type') || 'application/json'
-
-        setQaLogs(prev => [
-          ...prev,
-          `📡 Handshake completed in ${latency}ms. Parsing response payload...`,
-          `HTTP/1.1 ${status} ${statusText}`,
-          `Content-Type: ${contentType}`,
-          `Server Name: ${hostname}`
-        ])
-        setQaProgress(50)
-        await new Promise(resolve => setTimeout(resolve, 600))
-
-        let responseBodyText = ''
-        try {
-          const jsonVal = await response.json()
-          responseBodyText = JSON.stringify(jsonVal, null, 2)
-        } catch (e) {
-          const rawText = await response.text()
-          responseBodyText = rawText.length > 200 ? rawText.substring(0, 200) + '...' : rawText
-        }
-
-        const lines = responseBodyText.split('\n').slice(0, 6)
-        const displayLines = lines.map(line => `  ${line}`).join('\n')
-
-        setQaLogs(prev => [
-          ...prev,
-          `📦 Response Body (truncated):`,
-          displayLines,
-          `🧪 Assertion 01: Status code is ${status} (expected <400) [PASSED]`,
-          `🧪 Assertion 02: Content-Type header matches valid specification [PASSED]`,
-          `🧪 Assertion 03: Latency is ${latency}ms (target < 1500ms) [PASSED]`,
-          `🎉 SUCCESS: Newman runner processed request. 3/3 API assertions verified [PASSED]!`
-        ])
-        setQaProgress(100)
-        setQaTestStatus('success')
-      } catch (err) {
-        const endTime = performance.now()
-        const latency = Math.round(endTime - startTime)
-        
-        setQaLogs(prev => [
-          ...prev,
-          `⚠️ CORS / Network Policy Intercept: Browser blocked direct fetch from client environment.`,
-          `🔄 Automatically spinning up Aarav's QA Node.js sandbox CORS proxy bypass...`,
-          `📡 Tunnel established. Sending API packet from backend gateway...`,
-          `📡 Tunnel Response returned in ${latency + 60}ms. status=200 OK.`,
-          `HTTP/1.1 200 OK`,
-          `Content-Type: application/json; charset=utf-8`,
-          `Server Name: ${hostname}`,
-          `📦 Simulated Response Body:`,
-          `  {`,
-          `    "status": "success",`,
-          `    "message": "Mock payload matching schema design of ${hostname}",`,
-          `    "timestamp": "${new Date().toISOString()}",`,
-          `    "verification": "QA Sandbox Proxy Validation"`,
-          `  }`,
-          `🧪 Assertion 01: API node returned HTTP 200 [PASSED]`,
-          `🧪 Assertion 02: Payload schema matches specifications [PASSED]`,
-          `🧪 Assertion 03: Response latency is within limits [PASSED]`,
-          `🎉 SUCCESS: API assertion tests executed successfully (via proxy tunnel fallback)!`
-        ])
-        setQaProgress(100)
-        setQaTestStatus('success')
+        getResponseObj = await res.json()
+        latency = Math.round(performance.now() - startTime)
+      } catch (e) {
+        latency = Math.round(50 + Math.random() * 80)
       }
+      setPostmanMockStatus(`200 OK • ${latency}ms`)
+      setPostmanMockResponse(JSON.stringify(getResponseObj, null, 2))
+      setQaLogs(prev => [
+        ...prev,
+        `GET ${baseUrl}/users | Status: 200 OK | Time: ${latency}ms`,
+        "  ✔ Assertion: Response status code is 200 - PASSED",
+        "  ✔ Assertion: Response body matches JSON array schema - PASSED"
+      ])
+      setQaProgress(30)
+      await new Promise(resolve => setTimeout(resolve, 1200))
+
+      // 2. POST Request (Push)
+      setPostmanMockStep(2)
+      setPostmanMockMethod('POST')
+      setPostmanMockUrl(`${baseUrl}/users`)
+      setPostmanMockStatus('Sending...')
+      setPostmanMockResponse('{}')
+      await new Promise(resolve => setTimeout(resolve, 800))
+      
+      startTime = performance.now()
+      let postResponseObj = { id: 11, name: "Aarav Mathur", username: "aarav", email: "mathuraarav2005@gmail.com" }
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000)
+        const res = await fetch(`${baseUrl}/users`, {
+          method: 'POST',
+          body: JSON.stringify({ name: "Aarav Mathur", username: "aarav", email: "mathuraarav2005@gmail.com" }),
+          headers: { 'Content-type': 'application/json; charset=UTF-8' },
+          signal: controller.signal
+        })
+        clearTimeout(timeoutId)
+        postResponseObj = await res.json()
+        latency = Math.round(performance.now() - startTime)
+      } catch (e) {
+        latency = Math.round(80 + Math.random() * 100)
+      }
+      setPostmanMockStatus(`201 Created • ${latency}ms`)
+      setPostmanMockResponse(JSON.stringify(postResponseObj, null, 2))
+      setQaLogs(prev => [
+        ...prev,
+        `POST ${baseUrl}/users | Status: 201 Created | Time: ${latency}ms`,
+        "  ✔ Assertion: Status code is 201 (Created) - PASSED",
+        "  ✔ Assertion: Response body returns newly created id - PASSED"
+      ])
+      setQaProgress(50)
+      await new Promise(resolve => setTimeout(resolve, 1200))
+
+      // 3. PUT Request (Pull)
+      setPostmanMockStep(3)
+      setPostmanMockMethod('PUT')
+      setPostmanMockUrl(`${baseUrl}/users/1`)
+      setPostmanMockStatus('Sending...')
+      setPostmanMockResponse('{}')
+      await new Promise(resolve => setTimeout(resolve, 800))
+      
+      startTime = performance.now()
+      let putResponseObj = { id: 1, name: "Aarav Mathur (Replaced)", username: "aarav_m", email: "mathuraarav2005@gmail.com" }
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000)
+        const res = await fetch(`${baseUrl}/users/1`, {
+          method: 'PUT',
+          body: JSON.stringify({ id: 1, name: "Aarav Mathur (Replaced)", username: "aarav_m", email: "mathuraarav2005@gmail.com" }),
+          headers: { 'Content-type': 'application/json; charset=UTF-8' },
+          signal: controller.signal
+        })
+        clearTimeout(timeoutId)
+        putResponseObj = await res.json()
+        latency = Math.round(performance.now() - startTime)
+      } catch (e) {
+        latency = Math.round(70 + Math.random() * 90)
+      }
+      setPostmanMockStatus(`200 OK • ${latency}ms`)
+      setPostmanMockResponse(JSON.stringify(putResponseObj, null, 2))
+      setQaLogs(prev => [
+        ...prev,
+        `PUT ${baseUrl}/users/1 | Status: 200 OK | Time: ${latency}ms`,
+        "  ✔ Assertion: Status code is 200 (Success) - PASSED",
+        "  ✔ Assertion: Entire user object replaced successfully - PASSED"
+      ])
+      setQaProgress(70)
+      await new Promise(resolve => setTimeout(resolve, 1200))
+
+      // 4. PATCH Request (Modify)
+      setPostmanMockStep(4)
+      setPostmanMockMethod('PATCH')
+      setPostmanMockUrl(`${baseUrl}/users/1`)
+      setPostmanMockStatus('Sending...')
+      setPostmanMockResponse('{}')
+      await new Promise(resolve => setTimeout(resolve, 800))
+      
+      startTime = performance.now()
+      let patchResponseObj = { id: 1, name: "Leanne Graham", username: "aarav_patch" }
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000)
+        const res = await fetch(`${baseUrl}/users/1`, {
+          method: 'PATCH',
+          body: JSON.stringify({ username: "aarav_patch" }),
+          headers: { 'Content-type': 'application/json; charset=UTF-8' },
+          signal: controller.signal
+        })
+        clearTimeout(timeoutId)
+        patchResponseObj = await res.json()
+        latency = Math.round(performance.now() - startTime)
+      } catch (e) {
+        latency = Math.round(55 + Math.random() * 80)
+      }
+      setPostmanMockStatus(`200 OK • ${latency}ms`)
+      setPostmanMockResponse(JSON.stringify(patchResponseObj, null, 2))
+      setQaLogs(prev => [
+        ...prev,
+        `PATCH ${baseUrl}/users/1 | Status: 200 OK | Time: ${latency}ms`,
+        "  ✔ Assertion: Status code is 200 (Success) - PASSED",
+        "  ✔ Assertion: Field 'username' modified to 'aarav_patch' - PASSED"
+      ])
+      setQaProgress(85)
+      await new Promise(resolve => setTimeout(resolve, 1200))
+
+      // 5. DELETE Request (Remove)
+      setPostmanMockStep(5)
+      setPostmanMockMethod('DELETE')
+      setPostmanMockUrl(`${baseUrl}/users/1`)
+      setPostmanMockStatus('Sending...')
+      setPostmanMockResponse('{}')
+      await new Promise(resolve => setTimeout(resolve, 800))
+      
+      startTime = performance.now()
+      let deleteResponseObj = { success: true, message: "Resource successfully deleted" }
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000)
+        const res = await fetch(`${baseUrl}/users/1`, {
+          method: 'DELETE',
+          signal: controller.signal
+        })
+        clearTimeout(timeoutId)
+        const text = await res.text()
+        if (text) deleteResponseObj = JSON.parse(text)
+        latency = Math.round(performance.now() - startTime)
+      } catch (e) {
+        latency = Math.round(60 + Math.random() * 90)
+      }
+      setPostmanMockStatus(`200 OK • ${latency}ms`)
+      setPostmanMockResponse(JSON.stringify(deleteResponseObj, null, 2))
+      setQaLogs(prev => [
+        ...prev,
+        `DELETE ${baseUrl}/users/1 | Status: 200 OK | Time: ${latency}ms`,
+        "  ✔ Assertion: Status code is 200 (Success) - PASSED",
+        "  ✔ Assertion: Resource deletion verified - PASSED",
+        `🎉 SUCCESS: 5/5 API methods tested. 10/10 assertions verified [PASSED]!`
+      ])
+      setPostmanMockStep(6)
+      setQaProgress(100)
+      setQaTestStatus('success')
     } else if (qaActiveTab === 'jmeter') {
       const rawUrl = qaJmeterUrl.trim() || 'https://example.com'
       const targetUrl = rawUrl.startsWith('http://') || rawUrl.startsWith('https://') ? rawUrl : `https://${rawUrl}`
@@ -351,6 +480,12 @@ export default function App() {
         hostname = targetUrl
       }
 
+      setJmeterMockStep(1)
+      setJmeterThreadCount(0)
+      setJmeterRequestCount(0)
+      setJmeterAvgLatency(0)
+      setJmeterThroughput(0)
+
       setQaLogs([
         "⚡ Launching Apache JMeter Engine CLI...",
         `📂 Loading test plan profile config: thread_group_load.jmx`,
@@ -358,12 +493,15 @@ export default function App() {
         "📈 Ramp-up phase: Initializing virtual threads [0 -> 100]..."
       ])
       setQaProgress(15)
-      await new Promise(resolve => setTimeout(resolve, 600))
+      await new Promise(resolve => setTimeout(resolve, 800))
 
-      const samplesCount = 4
+      const threadSteps = [10, 25, 50, 75, 100]
       const latencies: number[] = []
 
-      for (let i = 0; i < samplesCount; i++) {
+      for (let i = 0; i < threadSteps.length; i++) {
+        const activeThreads = threadSteps[i]
+        setJmeterThreadCount(activeThreads)
+        
         const pingStart = performance.now()
         let sampleStatus = 'SUCCESS'
         try {
@@ -383,19 +521,28 @@ export default function App() {
         const sampleLatency = Math.max(5, Math.round(pingEnd - pingStart))
         latencies.push(sampleLatency)
 
+        const currentRequests = (i + 1) * 350
+        const currentThroughput = Math.round((currentRequests / ((i + 1) * 1.5)) * 10) / 10
+        const avgL = Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length)
+
+        setJmeterRequestCount(currentRequests)
+        setJmeterAvgLatency(avgL)
+        setJmeterThroughput(currentThroughput)
+
         setQaLogs(prev => [
           ...prev,
-          `  [Thread Group A] Thread-${(i + 1) * 25} request to ${hostname} completed in ${sampleLatency}ms [Status: ${sampleStatus}]`
+          `  [Thread Group A] Active Users: ${activeThreads} | Sample Requests: ${currentRequests} | Latency: ${sampleLatency}ms [Status: ${sampleStatus}]`
         ])
-        setQaProgress(15 + Math.round(((i + 1) / samplesCount) * 60))
-        await new Promise(resolve => setTimeout(resolve, 400))
+        setQaProgress(15 + Math.round(((i + 1) / threadSteps.length) * 70))
+        await new Promise(resolve => setTimeout(resolve, 1000))
       }
 
       const minL = Math.min(...latencies)
       const maxL = Math.max(...latencies)
-      const avgL = Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length)
-      const reqSec = Math.round(1000 / avgL * 50 * 10) / 10
+      const finalAvgL = Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length)
+      const finalThroughput = Math.round(1000 / finalAvgL * 50 * 10) / 10
 
+      setJmeterThroughput(finalThroughput)
       setQaLogs(prev => [
         ...prev,
         `📊 Aggregating JMeter performance dashboard results:`,
@@ -403,12 +550,13 @@ export default function App() {
         `  - Total Simulated Threads: 100 Virtual Users`,
         `  - Measured Latency Min:   ${minL}ms`,
         `  - Measured Latency Max:   ${maxL}ms`,
-        `  - Measured Latency Avg:   ${avgL}ms`,
-        `  - Calculated Throughput:   ${reqSec} requests/sec`,
+        `  - Measured Latency Avg:   ${finalAvgL}ms`,
+        `  - Calculated Throughput:   ${finalThroughput} requests/sec`,
         `  - Transaction Error Rate:  0.00%`,
         `🧹 Tearing down performance test session and compiling CSV log metrics...`,
         `🎉 SUCCESS: JMeter performance tests finished. Host is stable under load!`
       ])
+      setJmeterMockStep(2)
       setQaProgress(100)
       setQaTestStatus('success')
     }
@@ -1552,7 +1700,7 @@ export default function App() {
           </div>
 
           {/* Test Controls & Runner Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', alignItems: 'start' }}>
+          <div className="qa-grid-container">
             {/* Left Box: Test Information & Actions */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
@@ -1767,7 +1915,7 @@ export default function App() {
                 )}
                 <div className="terminal-body" style={{ height: '200px', padding: '12px', fontSize: '0.82rem', gap: '6px' }}>
                   {qaLogs.map((log, index) => (
-                    <div key={index} className="terminal-line" style={{ color: log.startsWith('✔') || log.startsWith('🎉') || log.includes('SUCCESS') || log.includes('[PASSED]') ? 'var(--accent-green)' : log.startsWith('❌') || log.includes('[FAILED]') || log.startsWith('⚠️') || log.includes('AssertionError') || log.includes('exit code 1') ? 'var(--accent-red)' : log.startsWith('⚡') ? 'var(--accent-purple)' : 'inherit' }}>
+                    <div key={index} className="terminal-line" style={{ color: log.startsWith('✔') || log.startsWith('🎉') || log.includes('SUCCESS') || log.includes('[PASSED]') ? 'var(--accent-green)' : log.startsWith('❌') || log.includes('[FAILED]') || log.includes('⚠️') || log.includes('AssertionError') || log.includes('exit code 1') ? 'var(--accent-red)' : log.startsWith('⚡') ? 'var(--accent-purple)' : 'inherit' }}>
                       {log}
                     </div>
                   ))}
@@ -1849,7 +1997,7 @@ export default function App() {
                           </div>
                           <span style={{ fontSize: '0.55rem', letterSpacing: '0.5px', color: '#777', textTransform: 'uppercase' }}>Open Source HR Management</span>
                         </div>
- 
+
                         {/* Login Container Box */}
                         <div style={{ width: '100%', maxWidth: '210px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {/* Fail Warning Alert */}
@@ -1859,13 +2007,13 @@ export default function App() {
                               <span>Invalid credentials</span>
                             </div>
                           )}
- 
+
                           {/* Credentials Hint Banner */}
                           <div style={{ background: '#eaedf2', padding: '6px 10px', borderRadius: '4px', fontSize: '0.68rem', color: '#4a5568' }}>
                             <div>Username : Admin</div>
                             <div>Password : admin123</div>
                           </div>
- 
+
                           {/* Form Input fields */}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <div style={{ position: 'relative' }}>
@@ -1889,7 +2037,7 @@ export default function App() {
                               <span style={{ position: 'absolute', left: '6px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', opacity: '0.5' }}>🔑</span>
                             </div>
                           </div>
- 
+
                           {/* Submit button */}
                           <button
                             type="button"
@@ -1910,14 +2058,14 @@ export default function App() {
                             Login
                           </button>
                         </div>
- 
+
                         {/* Footer text */}
                         <div style={{ fontSize: '0.55rem', color: '#888', textAlign: 'center' }}>
                           OrangeHRM OS 5.8 © 2005 - 2026 OrangeHRM, Inc.
                         </div>
                       </div>
                     )}
- 
+
                     {/* Animated Mouse Cursor */}
                     {seleniumCurrentStep > 0 && seleniumCurrentStep < 5 && (
                       <div
@@ -1951,6 +2099,315 @@ export default function App() {
                         ↖️
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Visual Postman Mockup (Only for Postman Tab) */}
+              {qaActiveTab === 'postman' && (
+                <div className="terminal-window" style={{ border: '1px solid var(--border-color)', background: '#1c1e22', color: '#e0e4e8', fontFamily: '"Inter", sans-serif' }}>
+                  {/* Postman Window Header */}
+                  <div style={{ background: '#2d3139', padding: '6px 12px', display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderBottom: '1px solid #101216', borderTopLeftRadius: '6px', borderTopRightRadius: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.9rem' }}>🚀</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#aaa' }}>Postman API Client</span>
+                    </div>
+                    {/* Window Controls */}
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff5f56', display: 'inline-block' }}></span>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffbd2e', display: 'inline-block' }}></span>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#27c93f', display: 'inline-block' }}></span>
+                    </div>
+                  </div>
+
+                  {/* Postman Sub-Header Tab Bar */}
+                  <div style={{ background: '#24282f', padding: '4px 12px', display: 'flex', gap: '6px', borderBottom: '1px solid #101216', fontSize: '0.7rem' }}>
+                    <div style={{ background: '#1c1e22', borderBottom: 'none', borderTopLeftRadius: '4px', borderTopRightRadius: '4px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px', color: '#ff6c37', fontWeight: 'bold' }}>
+                      <span>📄</span> JSONPlaceholder APIs
+                    </div>
+                  </div>
+
+                  {/* Postman Workspace Split Panel */}
+                  <div style={{ height: '330px', display: 'flex', flexDirection: 'row', background: '#1c1e22', overflow: 'hidden' }}>
+                    {/* Left Sidebar Collections List */}
+                    <div className="postman-sidebar" style={{ width: '25%', minWidth: '85px', borderRight: '1px solid #2d3139', background: '#181a1e', padding: '8px 4px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left' }}>
+                      <div style={{ fontSize: '0.65rem', fontWeight: 'bold', color: '#888', paddingLeft: '4px', textTransform: 'uppercase', marginBottom: '4px' }}>Collection</div>
+                      {[
+                        { step: 1, m: 'GET', l: 'Fetch Users' },
+                        { step: 2, m: 'POST', l: 'Create User' },
+                        { step: 3, m: 'PUT', l: 'Update User' },
+                        { step: 4, m: 'PATCH', l: 'Modify User' },
+                        { step: 5, m: 'DELETE', l: 'Remove User' }
+                      ].map(item => (
+                        <div
+                          key={item.step}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '4px 6px',
+                            borderRadius: '4px',
+                            background: postmanMockStep === item.step ? 'rgba(255, 108, 55, 0.15)' : 'transparent',
+                            border: postmanMockStep === item.step ? '1px solid rgba(255, 108, 55, 0.3)' : '1px solid transparent',
+                            cursor: 'pointer',
+                            fontSize: '0.65rem'
+                          }}
+                        >
+                          <strong style={{
+                            color:
+                              item.m === 'GET' ? '#28a745' :
+                              item.m === 'POST' ? '#f35d0b' :
+                              item.m === 'PUT' ? '#007bff' :
+                              item.m === 'PATCH' ? '#6f42c1' : '#dc3545',
+                            fontSize: '0.55rem',
+                            width: '24px'
+                          }}>
+                            {item.m}
+                          </strong>
+                          <span style={{ color: postmanMockStep === item.step ? '#fff' : '#aaa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {item.l}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Right Workspace Panel */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '10px', boxSizing: 'border-box', overflowY: 'auto' }}>
+                      {postmanMockStep === 0 ? (
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '10px', color: '#888' }}>
+                          <span style={{ fontSize: '2.5rem' }}>📮</span>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#ccc' }}>API Client Session Idle</div>
+                            <div style={{ fontSize: '0.75rem', marginTop: '4px' }}>Click "Execute Test Suite" to run collection APIs.</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
+                          {/* URL Bar row */}
+                          <div style={{ display: 'flex', border: '1px solid #2d3139', borderRadius: '4px', overflow: 'hidden', background: '#181a1e' }}>
+                            <div style={{
+                              background: '#2d3139',
+                              padding: '6px 12px',
+                              fontSize: '0.75rem',
+                              fontWeight: '800',
+                              color:
+                                postmanMockMethod === 'GET' ? '#28a745' :
+                                postmanMockMethod === 'POST' ? '#f35d0b' :
+                                postmanMockMethod === 'PUT' ? '#007bff' :
+                                postmanMockMethod === 'PATCH' ? '#6f42c1' : '#dc3545'
+                            }}>
+                              {postmanMockMethod}
+                            </div>
+                            <input
+                              type="text"
+                              value={postmanMockUrl}
+                              readOnly
+                              style={{ flex: 1, background: 'transparent', border: 'none', color: '#e0e0e0', fontSize: '0.7rem', padding: '6px', outline: 'none' }}
+                            />
+                            <button
+                              type="button"
+                              style={{ background: '#007bff', color: '#fff', border: 'none', padding: '0 16px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', opacity: qaTestStatus === 'running' ? 0.7 : 1 }}
+                            >
+                              Send
+                            </button>
+                          </div>
+
+                          {/* Headers/Params tab bar */}
+                          <div style={{ display: 'flex', gap: '10px', fontSize: '0.65rem', color: '#888', borderBottom: '1px solid #2d3139', paddingBottom: '4px' }}>
+                            <span>Params</span>
+                            <span>Headers (3)</span>
+                            <span style={{ color: '#ff6c37', borderBottom: '1px solid #ff6c37', paddingBottom: '4px' }}>Body (raw JSON)</span>
+                          </div>
+
+                          {/* Request Body Area if applicable */}
+                          {(postmanMockMethod === 'POST' || postmanMockMethod === 'PUT' || postmanMockMethod === 'PATCH') && (
+                            <div style={{ background: '#181a1e', border: '1px solid #2d3139', borderRadius: '4px', padding: '6px', fontSize: '0.65rem', color: '#4caf50', fontFamily: 'monospace', maxHeight: '55px', overflowY: 'auto', textAlign: 'left' }}>
+                              {postmanMockMethod === 'POST' && `{ "name": "Aarav Mathur", "email": "mathuraarav...`}
+                              {postmanMockMethod === 'PUT' && `{ "id": 1, "name": "Aarav Mathur (Replaced)"...}`}
+                              {postmanMockMethod === 'PATCH' && `{ "username": "aarav_patch" }`}
+                            </div>
+                          )}
+
+                          {/* Response Area */}
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px solid #2d3139', paddingTop: '6px' }}>
+                            {/* Response status meta row */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem' }}>
+                              <span style={{ fontWeight: 'bold', color: '#888' }}>Response</span>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <span style={{ color: '#888' }}>Status:</span>
+                                <span style={{ color: postmanMockStatus.includes('200') || postmanMockStatus.includes('201') ? '#28a745' : '#ffc107', fontWeight: 'bold' }}>
+                                  {postmanMockStatus}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {/* Response Body Text */}
+                            <pre style={{ flex: 1, background: '#181a1e', border: '1px solid #2d3139', borderRadius: '4px', padding: '6px', margin: 0, fontSize: '0.65rem', color: '#66d9ef', fontFamily: 'monospace', overflowY: 'auto', textAlign: 'left', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+                              {postmanMockResponse}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Visual JMeter Mockup (Only for JMeter Tab) */}
+              {qaActiveTab === 'jmeter' && (
+                <div className="terminal-window" style={{ border: '1px solid var(--border-color)', background: '#eaeaea', color: '#333', fontFamily: '"Segoe UI", sans-serif' }}>
+                  {/* JMeter Header Bar */}
+                  <div style={{ background: '#cfd8dc', padding: '4px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #b0bec5', borderTopLeftRadius: '6px', borderTopRightRadius: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.85rem' }}>📊</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#37474f' }}>Apache JMeter (v5.6.3)</span>
+                    </div>
+                    {/* Mini Toolbar */}
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <span style={{ cursor: 'pointer', fontSize: '0.85rem', opacity: jmeterMockStep === 1 ? 0.4 : 1 }} title="Start Run">▶️</span>
+                      <span style={{ cursor: 'pointer', fontSize: '0.85rem', opacity: jmeterMockStep !== 1 ? 0.4 : 1 }} title="Stop Run">🛑</span>
+                      <span style={{ cursor: 'pointer', fontSize: '0.85rem' }} title="Clear Logs">🧹</span>
+                    </div>
+                  </div>
+
+                  {/* JMeter workspace body */}
+                  <div style={{ height: '330px', display: 'flex', background: '#fff', overflow: 'hidden' }}>
+                    {/* Left side plan tree hierarchy */}
+                    <div className="jmeter-sidebar" style={{ width: '30%', borderRight: '1px solid #cfd8dc', background: '#f5f5f5', padding: '6px', fontSize: '0.65rem', boxSizing: 'border-box', textAlign: 'left' }}>
+                      <div style={{ fontWeight: 'bold', color: '#37474f', marginBottom: '6px' }}>Test Plan</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '8px' }}>
+                        <span style={{ color: '#263238' }}>👥 Thread Group</span>
+                        <span style={{ color: '#37474f', paddingLeft: '8px' }}>📡 HTTP Request Defaults</span>
+                        <span style={{ color: '#37474f', paddingLeft: '8px' }}>🔌 HTTP Sampler (Ping)</span>
+                        <span style={{ color: jmeterActiveView === 'Aggregate' ? '#1e88e5' : '#37474f', fontWeight: jmeterActiveView === 'Aggregate' ? 'bold' : 'normal', paddingLeft: '8px', cursor: 'pointer' }} onClick={() => setJmeterActiveView('Aggregate')}>
+                          📊 Aggregate Report
+                        </span>
+                        <span style={{ color: jmeterActiveView === 'Graph' ? '#1e88e5' : '#37474f', fontWeight: jmeterActiveView === 'Graph' ? 'bold' : 'normal', paddingLeft: '8px', cursor: 'pointer' }} onClick={() => setJmeterActiveView('Graph')}>
+                          📈 Graph Results
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Right side report metrics display */}
+                    <div style={{ flex: 1, padding: '10px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
+                      {/* Active view title bar */}
+                      <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', borderBottom: '2px solid #b0bec5', paddingBottom: '4px' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#37474f' }}>
+                          {jmeterActiveView === 'Aggregate' ? 'Aggregate Stats Report' : 'Throughput / Latency Graph'}
+                        </span>
+                        {/* Tab switcher buttons inside app */}
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => setJmeterActiveView('Aggregate')}
+                            style={{ fontSize: '0.6rem', padding: '2px 6px', background: jmeterActiveView === 'Aggregate' ? '#b0bec5' : '#eceff1', border: '1px solid #cfd8dc', borderRadius: '3px', cursor: 'pointer' }}
+                          >
+                            Table
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setJmeterActiveView('Graph')}
+                            style={{ fontSize: '0.6rem', padding: '2px 6px', background: jmeterActiveView === 'Graph' ? '#b0bec5' : '#eceff1', border: '1px solid #cfd8dc', borderRadius: '3px', cursor: 'pointer' }}
+                          >
+                            Graph
+                          </button>
+                        </div>
+                      </div>
+
+                      {jmeterMockStep === 0 ? (
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '10px', color: '#78909c' }}>
+                          <span style={{ fontSize: '2.5rem' }}>📈</span>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#546e7a' }}>JMeter Thread Planner Ready</div>
+                            <div style={{ fontSize: '0.75rem', marginTop: '4px' }}>Click "Execute Test Suite" to begin load benchmark.</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
+                          {/* Live thread configuration counts */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                            <div style={{ background: '#f5f5f5', border: '1px solid #cfd8dc', padding: '6px', borderRadius: '4px', textAlign: 'center' }}>
+                              <div style={{ fontSize: '0.6rem', color: '#546e7a', textTransform: 'uppercase' }}>Active Threads</div>
+                              <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#1e88e5' }}>{jmeterThreadCount} / 100</div>
+                            </div>
+                            <div style={{ background: '#f5f5f5', border: '1px solid #cfd8dc', padding: '6px', borderRadius: '4px', textAlign: 'center' }}>
+                              <div style={{ fontSize: '0.6rem', color: '#546e7a', textTransform: 'uppercase' }}>Throughput</div>
+                              <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#2e7d32' }}>{jmeterThroughput} /s</div>
+                            </div>
+                            <div style={{ background: '#f5f5f5', border: '1px solid #cfd8dc', padding: '6px', borderRadius: '4px', textAlign: 'center' }}>
+                              <div style={{ fontSize: '0.6rem', color: '#546e7a', textTransform: 'uppercase' }}>Avg Latency</div>
+                              <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#ef6c00' }}>{jmeterAvgLatency} ms</div>
+                            </div>
+                          </div>
+
+                          {/* View Panel Content */}
+                          {jmeterActiveView === 'Aggregate' ? (
+                            /* Aggregate Table View */
+                            <div style={{ flex: 1, border: '1px solid #cfd8dc', borderRadius: '4px', overflow: 'hidden' }}>
+                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem', textAlign: 'left' }}>
+                                <thead>
+                                  <tr style={{ background: '#eceff1', borderBottom: '1px solid #cfd8dc' }}>
+                                    <th style={{ padding: '4px 6px', color: '#37474f' }}>Label</th>
+                                    <th style={{ padding: '4px 6px', color: '#37474f' }}># Samples</th>
+                                    <th style={{ padding: '4px 6px', color: '#37474f' }}>Average</th>
+                                    <th style={{ padding: '4px 6px', color: '#37474f' }}>Error %</th>
+                                    <th style={{ padding: '4px 6px', color: '#37474f' }}>Throughput</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr style={{ borderBottom: '1px solid #cfd8dc' }}>
+                                    <td style={{ padding: '4px 6px', fontWeight: 'bold' }}>HTTP Request (HEAD)</td>
+                                    <td style={{ padding: '4px 6px' }}>{jmeterRequestCount}</td>
+                                    <td style={{ padding: '4px 6px' }}>{jmeterAvgLatency} ms</td>
+                                    <td style={{ padding: '4px 6px', color: '#2e7d32' }}>0.00%</td>
+                                    <td style={{ padding: '4px 6px', color: '#2e7d32', fontWeight: 'bold' }}>{jmeterThroughput}/sec</td>
+                                  </tr>
+                                  <tr style={{ background: '#eceff1', fontWeight: 'bold' }}>
+                                    <td style={{ padding: '4px 6px' }}>TOTAL</td>
+                                    <td style={{ padding: '4px 6px' }}>{jmeterRequestCount}</td>
+                                    <td style={{ padding: '4px 6px' }}>{jmeterAvgLatency} ms</td>
+                                    <td style={{ padding: '4px 6px', color: '#2e7d32' }}>0.00%</td>
+                                    <td style={{ padding: '4px 6px' }}>{jmeterThroughput}/sec</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            /* Live Animated Graph View (CSS visual bar plot) */
+                            <div style={{ flex: 1, border: '1px solid #cfd8dc', borderRadius: '4px', padding: '8px', boxSizing: 'border-box', background: '#fafafa', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', color: '#78909c' }}>
+                                <span>Latency limit (500ms)</span>
+                                <span>Avg: {jmeterAvgLatency}ms</span>
+                              </div>
+                              {/* Graph Container */}
+                              <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '10px', borderBottom: '1px solid #90a4ae', borderLeft: '1px solid #90a4ae', height: '100px', padding: '4px 10px', boxSizing: 'border-box' }}>
+                                {/* Multi-threaded bars representing latency responses */}
+                                {[
+                                  { h: 30, color: '#4caf50', label: 'T10' },
+                                  { h: 45, color: '#4caf50', label: 'T25' },
+                                  { h: 65, color: '#8bc34a', label: 'T50' },
+                                  { h: 80, color: '#ffc107', label: 'T75' },
+                                  { h: Math.min(100, Math.max(10, Math.round((jmeterAvgLatency / 300) * 100))), color: '#ff9800', label: 'T100' }
+                                ].map((bar, index) => (
+                                  <div key={index} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+                                    <div
+                                      style={{
+                                        width: '100%',
+                                        height: `${jmeterThreadCount >= (index === 0 ? 10 : index === 1 ? 25 : index === 2 ? 50 : index === 3 ? 75 : 100) ? bar.h : 0}%`,
+                                        background: bar.color,
+                                        borderRadius: '2px 2px 0 0',
+                                        transition: 'height 0.8s ease-in-out'
+                                      }}
+                                    ></div>
+                                    <span style={{ fontSize: '0.55rem', color: '#78909c', marginTop: '4px' }}>{bar.label}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

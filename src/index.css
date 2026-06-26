@@ -613,3 +613,23 @@ a {
     justify-content: center;
   }
 }
+
+/* Responsive QA Suite Grid and Mockups */
+.qa-grid-container {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .qa-grid-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 576px) {
+  .postman-sidebar, .jmeter-sidebar {
+    display: none !important;
+  }
+}
