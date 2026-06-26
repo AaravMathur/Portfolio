@@ -902,17 +902,17 @@ export default function App() {
       </header>
 
       {/* Hero Section */}
-      <section className="section" id="about" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '48px', alignItems: 'center', paddingTop: '60px' }}>
+      <section className="section hero-grid" id="about">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <div>
             <div className="inline-flex items-center gap-2 bg-purple-900/30 text-purple-400 px-3 py-1 rounded-full text-sm font-semibold border border-purple-500/20" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--glow-color)', color: 'var(--accent-purple)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '700', border: '1px solid var(--border-color)' }}>
               <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-purple)', display: 'inline-block' }}></span>
               Ready for DevOps Internships (Graduating 2026)
             </div>
-            <h1 style={{ fontSize: '3.6rem', lineHeight: '1.1', marginTop: '16px', marginBottom: '8px' }}>
+            <h1 className="hero-title">
               Hi, I'm <span className="text-gradient">Aarav Mathur</span>
             </h1>
-            <h2 style={{ fontSize: '1.8rem', color: 'var(--text-secondary)', fontWeight: '500', marginBottom: '16px' }}>
+            <h2 className="hero-subtitle-text">
               Cloud Infrastructure, DevOps & QA Automation Engineer
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '600px' }}>
@@ -921,7 +921,7 @@ export default function App() {
           </div>
 
           {/* Quick Metrics */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          <div className="hero-metrics-grid">
             <div className="glass-card" style={{ padding: '16px', textAlign: 'center' }}>
               <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--accent-purple)' }}>8+</div>
               <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Tech Certifications</div>
@@ -1056,7 +1056,7 @@ export default function App() {
           Real world experiences applying DevOps configurations, container deployments, cloud orchestration, and custom web interface integrations.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+        <div className="experience-grid">
           {/* Celebal Technologies */}
           <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
             <div>
@@ -1121,7 +1121,7 @@ export default function App() {
         </div>
 
         {/* Education & Certifications Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px', marginTop: '48px' }}>
+        <div className="education-certs-grid">
           {/* Left side: Education */}
           <div>
             <h3 style={{ fontSize: '1.6rem', marginBottom: '24px' }}>Education</h3>
@@ -1339,7 +1339,7 @@ export default function App() {
         </div>
 
         {/* Pipeline Controls & Log Board */}
-        <div style={{ display: 'grid', gridTemplateColumns: '0.35fr 0.65fr', gap: '24px', alignItems: 'start' }}>
+        <div className="pipeline-controls-grid">
           <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <h3 style={{ fontSize: '1.2rem' }}>Pipeline Control Node</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
@@ -1476,7 +1476,7 @@ export default function App() {
               </div>
 
               {/* Grid content of application */}
-              <div style={{ display: 'grid', gridTemplateColumns: '0.4fr 0.6fr', gap: '24px' }}>
+              <div className="sandbox-grid">
                 {/* Form to submit requests */}
                 <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <h4 style={{ fontSize: '1rem', marginBottom: '16px' }}>Submit New Track Proposal</h4>
@@ -1837,7 +1837,7 @@ export default function App() {
                   <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                     🛠️ Simulation Test Flow Path
                   </label>
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="simulation-outcome-toggles">
                     <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', background: seleniumTestOutcome === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-tertiary)', border: seleniumTestOutcome === 'success' ? '1px solid var(--accent-green)' : '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', transition: 'all 0.2s' }}>
                       <input
                         type="radio"
@@ -2420,7 +2420,7 @@ export default function App() {
       <div className="ticks" style={{ height: '1px', borderTop: '1px solid var(--border-color)', margin: '40px 0' }}></div>
 
       {/* Contact Section */}
-      <section className="section" id="contact" style={{ display: 'grid', gridTemplateColumns: '0.45fr 0.55fr', gap: '48px' }}>
+      <section className="section contact-grid" id="contact">
         <div>
           <div className="section-title">
             <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

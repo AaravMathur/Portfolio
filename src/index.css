@@ -633,3 +633,190 @@ a {
     display: none !important;
   }
 }
+
+/* --- New Responsive Classes & Mobile Enhancements --- */
+
+/* Hero Title & Subtitle styling */
+.hero-title {
+  font-size: 3.6rem;
+  line-height: 1.1;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+
+.hero-subtitle-text {
+  font-size: 1.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+/* Layout Grids */
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 48px;
+  align-items: center;
+  padding-top: 60px;
+}
+
+.hero-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.experience-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.education-certs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  margin-top: 48px;
+}
+
+.pipeline-controls-grid {
+  display: grid;
+  grid-template-columns: 0.35fr 0.65fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.sandbox-grid {
+  display: grid;
+  grid-template-columns: 0.4fr 0.6fr;
+  gap: 24px;
+}
+
+.simulation-outcome-toggles {
+  display: flex;
+  gap: 10px;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 0.45fr 0.55fr;
+  gap: 48px;
+}
+
+/* Tablet and Large Mobile Adaptations */
+@media (max-width: 992px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding-top: 20px;
+    text-align: center;
+  }
+  .hero-grid > div {
+    align-items: center;
+  }
+  .hero-grid img {
+    margin: 0 auto;
+  }
+  .hero-title {
+    font-size: 2.8rem;
+  }
+  .hero-subtitle-text {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .experience-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .education-certs-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .pipeline-controls-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .sandbox-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  
+  /* Make section headers and subtitles responsive */
+  .section {
+    padding: 45px 16px 30px;
+  }
+  .section-title {
+    font-size: 1.6rem;
+  }
+  .section-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+  }
+}
+
+/* Small Mobile Adaptations */
+@media (max-width: 576px) {
+  .hero-metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .simulation-outcome-toggles {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  /* Horizontal scroll for navbar to avoid multi-row wrapping clutter */
+  .header-container {
+    padding: 8px 12px;
+  }
+  .nav-links {
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    justify-content: flex-start;
+    padding: 4px 0 8px 0;
+    gap: 12px;
+    scrollbar-width: none; /* Hide for Firefox */
+  }
+  .nav-links::-webkit-scrollbar {
+    display: none; /* Hide for Chrome, Safari, Opera */
+  }
+  .nav-link {
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+  .theme-toggle-btn {
+    flex-shrink: 0;
+  }
+  .nav-links .btn-primary {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+  
+  /* Center and frame the success toast on mobile viewports */
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.85rem;
+    padding: 10px 16px;
+  }
+  
+  .hero-title {
+    font-size: 2.2rem;
+  }
+  .hero-subtitle-text {
+    font-size: 1.2rem;
+  }
+}
+
